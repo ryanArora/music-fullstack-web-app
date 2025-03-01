@@ -19,6 +19,8 @@ Make sure you do everything in a type-safe way.
 
 Separate your code into components. Define each component in a new file. Use UI primitives from Shadcn UI.
 
+Whenever you make a change to the Prisma schema, be sure to run pnpm db:generate to run a dev migration.
+
 Each time I ask you to write code, consider the changes to the:
 
 - Database schema (prisma/schema.prisma)
