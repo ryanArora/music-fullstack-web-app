@@ -1,4 +1,8 @@
 import { postRouter } from "~/server/api/routers/post";
+import { songRouter } from "~/server/api/routers/song";
+import { artistRouter } from "~/server/api/routers/artist";
+import { albumRouter } from "~/server/api/routers/album";
+import { playlistRouter } from "~/server/api/routers/playlist";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -8,6 +12,10 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   post: postRouter,
+  song: songRouter,
+  artist: artistRouter,
+  album: albumRouter,
+  playlist: playlistRouter,
 });
 
 // export type definition of API
