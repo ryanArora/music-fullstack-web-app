@@ -1,8 +1,63 @@
 import { PrismaClient } from "@prisma/client";
+import { faker } from "@faker-js/faker";
 
 const prisma = new PrismaClient();
 
+// Configuration for the amount of data to generate
+const ARTIST_COUNT = 50;
+const ALBUMS_PER_ARTIST_MIN = 1;
+const ALBUMS_PER_ARTIST_MAX = 5;
+const SONGS_PER_ALBUM_MIN = 6;
+const SONGS_PER_ALBUM_MAX = 12;
+const PLAYLIST_COUNT = 30;
+const SONGS_PER_PLAYLIST_MIN = 8;
+const SONGS_PER_PLAYLIST_MAX = 25;
+
+// Helper function to get a random integer between min and max (inclusive)
+function getRandomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Helper function to get a random subset of items from an array
+function getRandomSubset<T>(array: T[], minSize: number, maxSize: number): T[] {
+  const size = getRandomInt(
+    Math.min(minSize, array.length),
+    Math.min(maxSize, array.length),
+  );
+  const shuffled = [...array].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, size);
+}
+
+// Helper to generate realistic music genres
+function getRandomGenre(): string {
+  const genres = [
+    "Pop",
+    "Rock",
+    "Hip Hop",
+    "R&B",
+    "Country",
+    "Electronic",
+    "Jazz",
+    "Classical",
+    "Reggae",
+    "Folk",
+    "Metal",
+    "Blues",
+    "Latin",
+    "Punk",
+    "Soul",
+    "Funk",
+    "Disco",
+    "Alternative",
+    "Indie",
+    "K-pop",
+  ];
+  return faker.helpers.arrayElement(genres);
+}
+
 async function main() {
+  console.log("Starting database seeding...");
+
   // Clear existing data
   await prisma.playlistSong.deleteMany();
   await prisma.playlist.deleteMany();
@@ -10,219 +65,145 @@ async function main() {
   await prisma.album.deleteMany();
   await prisma.artist.deleteMany();
 
-  // Create artists
-  const artist1 = await prisma.artist.create({
-    data: {
-      name: "The Weekend",
-      imageUrl:
-        "https://i.scdn.co/image/ab6761610000e5eb92202c4d41ebd9bf6be01e3c",
-    },
+  console.log("Previous data cleared. Generating new data...");
+
+  // Generate artists data using map
+  console.log(`Preparing ${ARTIST_COUNT} artists...`);
+  const artistsData = Array.from({ length: ARTIST_COUNT }).map(() => ({
+    name: faker.person.fullName(),
+    imageUrl: faker.image.urlLoremFlickr({ height: 400, width: 400 }),
+  }));
+
+  // Create artists in a batch
+  const artists = await prisma.artist
+    .createMany({
+      data: artistsData,
+    })
+    .then(async () => {
+      // Fetch the created artists to get their IDs
+      return await prisma.artist.findMany();
+    });
+
+  console.log(`Generated ${artists.length} artists.`);
+
+  // Generate album data using flatMap
+  console.log("Preparing albums for each artist...");
+  const albumsData = artists.flatMap((artist) => {
+    const albumCount = getRandomInt(
+      ALBUMS_PER_ARTIST_MIN,
+      ALBUMS_PER_ARTIST_MAX,
+    );
+
+    return Array.from({ length: albumCount }).map(() => {
+      const releaseDate = faker.date.between({
+        from: new Date(1990, 0, 1),
+        to: new Date(),
+      });
+
+      return {
+        title: faker.music.songName(),
+        imageUrl: faker.image.urlLoremFlickr({ height: 400, width: 400 }),
+        artistId: artist.id,
+        releaseDate: releaseDate,
+      };
+    });
   });
 
-  const artist2 = await prisma.artist.create({
-    data: {
-      name: "Dua Lipa",
-      imageUrl:
-        "https://i.scdn.co/image/ab6761610000e5ebf9bafe9abe2c8d509c8a7849",
-    },
+  // Create albums in a batch
+  await prisma.album.createMany({
+    data: albumsData,
   });
 
-  const artist3 = await prisma.artist.create({
-    data: {
-      name: "Billie Eilish",
-      imageUrl:
-        "https://i.scdn.co/image/ab6761610000e5ebc5ceb05f152103b2b70d3b06",
-    },
+  // Fetch the created albums to get their IDs
+  const albums = await prisma.album.findMany();
+  console.log(`Generated ${albums.length} albums.`);
+
+  // Generate songs data using flatMap
+  console.log("Preparing songs for each album...");
+  const songsData = albums.flatMap((album) => {
+    const songCount = getRandomInt(SONGS_PER_ALBUM_MIN, SONGS_PER_ALBUM_MAX);
+    const artist = artists.find((a) => a.id === album.artistId);
+
+    if (!artist) return [];
+
+    return Array.from({ length: songCount }).map(() => ({
+      title: faker.music.songName(),
+      duration: getRandomInt(120, 420), // 2-7 minutes in seconds
+      url: `/songs/${faker.string.uuid()}.mp3`,
+      imageUrl: album.imageUrl, // Use album cover
+      artistId: artist.id,
+      albumId: album.id,
+      genre: getRandomGenre(),
+      releaseDate: album.releaseDate,
+    }));
   });
 
-  // Create albums
-  const album1 = await prisma.album.create({
-    data: {
-      title: "After Hours",
-      imageUrl:
-        "https://i.scdn.co/image/ab67616d0000b2738863bc11d2aa12b54f5aeb36",
-      artistId: artist1.id,
-      releaseDate: new Date("2020-03-20"),
-    },
+  // Create songs in a batch
+  await prisma.song.createMany({
+    data: songsData,
   });
 
-  const album2 = await prisma.album.create({
-    data: {
-      title: "Future Nostalgia",
-      imageUrl:
-        "https://i.scdn.co/image/ab67616d0000b2734e0362c225863f6ae9c4f5c7",
-      artistId: artist2.id,
-      releaseDate: new Date("2020-03-27"),
-    },
+  // Fetch the created songs to get their IDs
+  const songs = await prisma.song.findMany();
+  console.log(`Generated ${songs.length} songs.`);
+
+  // Generate playlists data using map
+  console.log(`Preparing ${PLAYLIST_COUNT} playlists...`);
+  const playlistsData = Array.from({ length: PLAYLIST_COUNT }).map(() => {
+    const playlistName = faker.helpers.arrayElement([
+      `${faker.music.genre()} Mix`,
+      `${faker.word.adjective()} Vibes`,
+      faker.word.adjective() + " " + faker.word.noun(),
+      faker.person.firstName() + "'s Playlist",
+      faker.company.buzzPhrase(),
+    ]);
+
+    return {
+      title: playlistName,
+      imageUrl: faker.image.urlLoremFlickr({ height: 400, width: 400 }),
+    };
   });
 
-  const album3 = await prisma.album.create({
-    data: {
-      title: "Happier Than Ever",
-      imageUrl:
-        "https://i.scdn.co/image/ab67616d0000b2732a038d3bf875d23e4aeaa84e",
-      artistId: artist3.id,
-      releaseDate: new Date("2021-07-30"),
-    },
+  // Create playlists in a batch
+  await prisma.playlist.createMany({
+    data: playlistsData,
   });
 
-  // Create songs
-  const song1 = await prisma.song.create({
-    data: {
-      title: "Blinding Lights",
-      duration: 200,
-      url: "/songs/blinding-lights.mp3",
-      imageUrl:
-        "https://i.scdn.co/image/ab67616d0000b2738863bc11d2aa12b54f5aeb36",
-      artistId: artist1.id,
-      albumId: album1.id,
-      genre: "Pop",
-      releaseDate: new Date("2020-03-20"),
-    },
+  // Fetch the created playlists to get their IDs
+  const playlists = await prisma.playlist.findMany();
+  console.log(`Generated ${playlists.length} playlists.`);
+
+  // Generate playlist songs data using flatMap
+  console.log("Adding songs to playlists...");
+  const playlistSongsData = playlists.flatMap((playlist) => {
+    const playlistSongs = getRandomSubset(
+      songs,
+      SONGS_PER_PLAYLIST_MIN,
+      SONGS_PER_PLAYLIST_MAX,
+    );
+
+    return playlistSongs.map((song, index) => ({
+      playlistId: playlist.id,
+      songId: song.id,
+      order: index + 1,
+    }));
   });
 
-  const song2 = await prisma.song.create({
-    data: {
-      title: "Save Your Tears",
-      duration: 215,
-      url: "/songs/save-your-tears.mp3",
-      imageUrl:
-        "https://i.scdn.co/image/ab67616d0000b2738863bc11d2aa12b54f5aeb36",
-      artistId: artist1.id,
-      albumId: album1.id,
-      genre: "Pop",
-      releaseDate: new Date("2020-03-20"),
-    },
+  // Create playlist songs in a batch
+  await prisma.playlistSong.createMany({
+    data: playlistSongsData,
   });
 
-  const song3 = await prisma.song.create({
-    data: {
-      title: "Don't Start Now",
-      duration: 183,
-      url: "/songs/dont-start-now.mp3",
-      imageUrl:
-        "https://i.scdn.co/image/ab67616d0000b2734e0362c225863f6ae9c4f5c7",
-      artistId: artist2.id,
-      albumId: album2.id,
-      genre: "Pop",
-      releaseDate: new Date("2019-11-01"),
-    },
-  });
-
-  const song4 = await prisma.song.create({
-    data: {
-      title: "Levitating",
-      duration: 203,
-      url: "/songs/levitating.mp3",
-      imageUrl:
-        "https://i.scdn.co/image/ab67616d0000b2734e0362c225863f6ae9c4f5c7",
-      artistId: artist2.id,
-      albumId: album2.id,
-      genre: "Pop",
-      releaseDate: new Date("2020-10-01"),
-    },
-  });
-
-  const song5 = await prisma.song.create({
-    data: {
-      title: "Happier Than Ever",
-      duration: 298,
-      url: "/songs/happier-than-ever.mp3",
-      imageUrl:
-        "https://i.scdn.co/image/ab67616d0000b2732a038d3bf875d23e4aeaa84e",
-      artistId: artist3.id,
-      albumId: album3.id,
-      genre: "Alternative",
-      releaseDate: new Date("2021-07-30"),
-    },
-  });
-
-  const song6 = await prisma.song.create({
-    data: {
-      title: "Therefore I Am",
-      duration: 173,
-      url: "/songs/therefore-i-am.mp3",
-      imageUrl:
-        "https://i.scdn.co/image/ab67616d0000b2732a038d3bf875d23e4aeaa84e",
-      artistId: artist3.id,
-      albumId: album3.id,
-      genre: "Alternative",
-      releaseDate: new Date("2020-11-12"),
-    },
-  });
-
-  // Create playlists
-  const playlist1 = await prisma.playlist.create({
-    data: {
-      title: "Top Hits",
-      imageUrl:
-        "https://i.scdn.co/image/ab67706f00000002eb12c082e4da45a4b248c9b9",
-    },
-  });
-
-  const playlist2 = await prisma.playlist.create({
-    data: {
-      title: "Chill Vibes",
-      imageUrl:
-        "https://i.scdn.co/image/ab67706f00000002b0fe40a6e1692822f5a9d8f1",
-    },
-  });
-
-  // Add songs to playlists
-  await prisma.playlistSong.create({
-    data: {
-      playlistId: playlist1.id,
-      songId: song1.id,
-      order: 1,
-    },
-  });
-
-  await prisma.playlistSong.create({
-    data: {
-      playlistId: playlist1.id,
-      songId: song3.id,
-      order: 2,
-    },
-  });
-
-  await prisma.playlistSong.create({
-    data: {
-      playlistId: playlist1.id,
-      songId: song5.id,
-      order: 3,
-    },
-  });
-
-  await prisma.playlistSong.create({
-    data: {
-      playlistId: playlist2.id,
-      songId: song2.id,
-      order: 1,
-    },
-  });
-
-  await prisma.playlistSong.create({
-    data: {
-      playlistId: playlist2.id,
-      songId: song4.id,
-      order: 2,
-    },
-  });
-
-  await prisma.playlistSong.create({
-    data: {
-      playlistId: playlist2.id,
-      songId: song6.id,
-      order: 3,
-    },
-  });
-
-  console.log("Database seeded successfully");
+  console.log("Database seeded successfully!");
+  console.log(`Generated ${artists.length} artists`);
+  console.log(`Generated ${albums.length} albums`);
+  console.log(`Generated ${songs.length} songs`);
+  console.log(`Generated ${playlists.length} playlists`);
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("Error seeding database:", e);
     process.exit(1);
   })
   .finally(async () => {
