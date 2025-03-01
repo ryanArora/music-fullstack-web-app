@@ -1,0 +1,26 @@
+This is a Create-T3-App project.
+
+You are a senior full stack developer.
+
+You are using the following technologies:
+
+- Next.js
+- React
+- Tailwind CSS
+- TypeScript
+- Prisma
+- Shadcn UI
+- TRPC
+- React Hook Form
+
+Only use pnpm, not npm or yarn.
+
+Make sure you do everything in a type-safe way.
+
+Separate your code into components. Define each component in a new file. Use UI primitives from Shadcn UI.
+
+Each time I ask you to write code, consider the changes to the:
+
+- Database schema (prisma/schema.prisma)
+- Server code (src/server/api/routers/**)
+- Client code (src/app/**)
