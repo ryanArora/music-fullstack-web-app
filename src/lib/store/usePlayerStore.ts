@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { type Song, type Album, type Artist } from "@prisma/client";
+import {
+  type Song,
+  type Album,
+  type Artist,
+  type Playlist,
+} from "@prisma/client";
 
 export interface SongWithDetails extends Song {
   artist: Artist;
@@ -34,6 +39,7 @@ interface PlayerState {
   // Methods
   playSong: (song: SongWithDetails, songs?: SongWithDetails[]) => void;
   playAlbum: (album: Album & { songs: SongWithDetails[] }) => void;
+  playPlaylist: (playlist: Playlist & { songs: SongWithDetails[] }) => void;
   togglePlayPause: () => Promise<void>;
   setVolume: (volume: number) => void;
   toggleMute: () => void;
@@ -202,6 +208,16 @@ export const usePlayerStore = create<PlayerState>()(
           const firstSong = album.songs[0];
           if (firstSong) {
             get().playSong(firstSong, album.songs);
+          }
+        },
+
+        // Play all songs from a playlist
+        playPlaylist: (playlist) => {
+          if (playlist.songs.length === 0) return;
+
+          const firstSong = playlist.songs[0];
+          if (firstSong) {
+            get().playSong(firstSong, playlist.songs);
           }
         },
 

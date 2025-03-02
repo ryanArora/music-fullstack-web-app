@@ -4,11 +4,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Calendar, Clock, Music } from "lucide-react";
 
-import { api } from "~/trpc/server";
-import { PlayButton } from "~/app/_components/play-button";
 import { SongList } from "~/app/_components/song-list";
+import { PlaylistPlayButton } from "~/app/_components/playlist-play-button";
+import { api } from "~/trpc/server";
 
-interface AlbumPageProps {
+interface PageProps {
   params: {
     id: string;
   };
@@ -16,39 +16,39 @@ interface AlbumPageProps {
 
 export async function generateMetadata({
   params,
-}: AlbumPageProps): Promise<Metadata> {
-  const album = await api.album.getById({ id: params.id });
+}: PageProps): Promise<Metadata> {
+  const playlist = await api.playlist.getById({ id: params.id });
 
-  if (!album) {
+  if (!playlist) {
     return {
-      title: "Album Not Found",
+      title: "Playlist Not Found | Music App",
     };
   }
 
   return {
-    title: `${album.title} - ${album.artist.name}`,
-    description: `Listen to ${album.title} by ${album.artist.name}`,
+    title: `${playlist.title} | Music App`,
+    description: `Listen to ${playlist.title} playlist`,
   };
 }
 
-export default async function AlbumPage({ params }: AlbumPageProps) {
-  const album = await api.album.getById({ id: params.id });
+export default async function PlaylistPage({ params }: PageProps) {
+  const playlist = await api.playlist.getById({ id: params.id });
 
-  if (!album) {
+  if (!playlist) {
     notFound();
   }
 
-  // Format the release date
-  const releaseDate = new Date(album.releaseDate).toLocaleDateString(
+  // Extract songs from the playlist
+  const songs = playlist.songs.map((playlistSong) => playlistSong.song);
+
+  // Format the creation date
+  const creationDate = new Date(playlist.createdAt).toLocaleDateString(
     undefined,
     { year: "numeric", month: "long", day: "numeric" },
   );
 
   // Calculate total duration of all songs
-  const totalSeconds = album.songs.reduce(
-    (total, song) => total + song.duration,
-    0,
-  );
+  const totalSeconds = songs.reduce((total, song) => total + song.duration, 0);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const totalDuration = hours ? `${hours} hr ${minutes} min` : `${minutes} min`;
@@ -58,8 +58,8 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
       <div className="mb-8 flex flex-col gap-6 md:flex-row">
         <div className="relative aspect-square h-64 w-64 overflow-hidden rounded-lg shadow-lg">
           <Image
-            src={album.imageUrl}
-            alt={album.title}
+            src={playlist.imageUrl ?? "/images/playlist-default.jpg"}
+            alt={playlist.title}
             fill
             className="object-cover"
             priority
@@ -67,22 +67,19 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
         </div>
 
         <div className="flex flex-col justify-end">
-          <h1 className="mb-2 text-3xl font-bold">{album.title}</h1>
-          <Link
-            href={`/artists/${album.artist.id}`}
-            className="text-primary mb-4 text-xl hover:underline"
-          >
-            {album.artist.name}
-          </Link>
+          <p className="text-muted-foreground mb-2 text-sm font-medium">
+            PLAYLIST
+          </p>
+          <h1 className="mb-4 text-3xl font-bold">{playlist.title}</h1>
 
           <div className="text-muted-foreground mb-6 flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              <span>{releaseDate}</span>
+              <span>Created {creationDate}</span>
             </div>
             <div className="flex items-center gap-1">
               <Music className="h-4 w-4" />
-              <span>{album.songs.length} songs</span>
+              <span>{songs.length} songs</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
@@ -91,31 +88,28 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <PlayButton albumId={album.id} />
+            <PlaylistPlayButton playlistId={playlist.id} />
           </div>
         </div>
       </div>
 
       <div className="mb-6">
         <h2 className="mb-4 text-2xl font-bold">Songs</h2>
-        {album.songs.length === 0 ? (
-          <p className="text-muted-foreground">No songs in this album yet.</p>
+        {songs.length === 0 ? (
+          <div className="rounded-lg border p-8 text-center">
+            <h3 className="mb-2 text-lg font-medium">This playlist is empty</h3>
+            <p className="text-muted-foreground">
+              No songs have been added to this playlist yet.
+            </p>
+          </div>
         ) : (
-          <SongList
-            songs={album.songs.map((song) => ({
-              ...song,
-              artist: {
-                id: album.artist.id,
-                name: album.artist.name,
-              },
-            }))}
-          />
+          <SongList songs={songs} />
         )}
       </div>
 
       <div>
         <Link
-          href="/albums"
+          href="/playlists"
           className="text-primary flex items-center gap-2 hover:underline"
         >
           <svg
@@ -132,7 +126,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
               d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
             />
           </svg>
-          Back to Albums
+          Back to Playlists
         </Link>
       </div>
     </div>

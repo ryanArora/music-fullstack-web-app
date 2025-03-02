@@ -5,8 +5,7 @@ const prisma = new PrismaClient();
 
 // Configuration for the amount of data to generate
 const ARTIST_COUNT = 50;
-const ALBUMS_PER_ARTIST_MIN = 1;
-const ALBUMS_PER_ARTIST_MAX = 5;
+const ALBUMS_PER_ARTIST = 10; // Exactly 10 albums per artist
 const SONGS_PER_ALBUM_MIN = 6;
 const SONGS_PER_ALBUM_MAX = 12;
 const PLAYLIST_COUNT = 30;
@@ -89,12 +88,7 @@ async function main() {
   // Generate album data using flatMap
   console.log("Preparing albums for each artist...");
   const albumsData = artists.flatMap((artist) => {
-    const albumCount = getRandomInt(
-      ALBUMS_PER_ARTIST_MIN,
-      ALBUMS_PER_ARTIST_MAX,
-    );
-
-    return Array.from({ length: albumCount }).map(() => {
+    return Array.from({ length: ALBUMS_PER_ARTIST }).map(() => {
       const releaseDate = faker.date.between({
         from: new Date(1990, 0, 1),
         to: new Date(),

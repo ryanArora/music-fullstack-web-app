@@ -1,18 +1,18 @@
 "use client";
 
 import { Pause, Play } from "lucide-react";
-import { type Song } from "@prisma/client";
+import { Artist, type Song } from "@prisma/client";
+import Link from "next/link";
 
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { cn } from "~/lib/utils";
 
 interface SongListProps {
-  songs: Song[];
-  artistName: string;
+  songs: (Song & { artist: Pick<Artist, "name" | "id"> })[];
 }
 
-export function SongList({ songs, artistName }: SongListProps) {
+export function SongList({ songs }: SongListProps) {
   const { playSong, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
 
@@ -22,7 +22,7 @@ export function SongList({ songs, artistName }: SongListProps) {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const handlePlay = (song: Song) => {
+  const handlePlay = (song: Song & { artist: Pick<Artist, "name" | "id"> }) => {
     // If this song is current playing, toggle playback
     if (currentSong?.id === song.id) {
       void togglePlayPause();
@@ -33,8 +33,8 @@ export function SongList({ songs, artistName }: SongListProps) {
     const songWithDetails = {
       ...song,
       artist: {
-        name: artistName,
-        id: song.artistId,
+        name: song.artist.name,
+        id: song.artist.id,
         imageUrl: "",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -47,8 +47,8 @@ export function SongList({ songs, artistName }: SongListProps) {
       songs.map((s) => ({
         ...s,
         artist: {
-          name: artistName,
-          id: s.artistId,
+          name: s.artist.name,
+          id: s.artist.id,
           imageUrl: "",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -112,9 +112,12 @@ export function SongList({ songs, artistName }: SongListProps) {
                 >
                   {song.title}
                 </span>
-                <span className="text-muted-foreground text-sm">
-                  {artistName}
-                </span>
+                <Link
+                  href={`/artists/${song.artist.id}`}
+                  className="text-muted-foreground hover:text-primary text-sm hover:underline"
+                >
+                  {song.artist.name}
+                </Link>
               </div>
               <span
                 className={cn(

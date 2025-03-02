@@ -2,16 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Disc, Music, Radio, UserRound, ListMusic } from "lucide-react";
+import { Disc, ListMusic, Radio, UserRound } from "lucide-react";
 
 import { cn } from "~/lib/utils";
 
 const navItems = [
-  {
-    name: "Home",
-    href: "/",
-    icon: Home,
-  },
   {
     name: "Explore",
     href: "/explore",
@@ -26,11 +21,6 @@ const navItems = [
     name: "Artists",
     href: "/artists",
     icon: UserRound,
-  },
-  {
-    name: "Songs",
-    href: "/songs",
-    icon: Music,
   },
   {
     name: "Playlists",

@@ -2,7 +2,7 @@ import "~/styles/globals.css";
 
 import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
-import { Home, Music, Search, User } from "lucide-react";
+import { Disc, ListMusic, Music, Radio, User } from "lucide-react";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { MainNav } from "~/app/_components/main-nav";
@@ -45,22 +45,22 @@ export default async function RootLayout({
               </div>
               {/* Mobile bottom navigation */}
               <div className="bg-background fixed bottom-0 left-0 z-10 flex w-full items-center justify-around border-t py-2 md:hidden">
-                <a href="/" className="flex flex-col items-center p-2">
-                  <Home className="h-5 w-5" />
-                  <span className="text-xs">Home</span>
+                <a href="/explore" className="flex flex-col items-center p-2">
+                  <Radio className="h-5 w-5" />
+                  <span className="text-xs">Explore</span>
                 </a>
-                <a href="/search" className="flex flex-col items-center p-2">
-                  <Search className="h-5 w-5" />
-                  <span className="text-xs">Search</span>
+                <a href="/albums" className="flex flex-col items-center p-2">
+                  <Disc className="h-5 w-5" />
+                  <span className="text-xs">Albums</span>
                 </a>
-                <a href="/library" className="flex flex-col items-center p-2">
-                  <Music className="h-5 w-5" />
-                  <span className="text-xs">Library</span>
+                <a href="/artists" className="flex flex-col items-center p-2">
+                  <User className="h-5 w-5" />
+                  <span className="text-xs">Artists</span>
                 </a>
-                <div className="flex flex-col items-center p-2">
-                  <ThemeToggle />
-                  <span className="text-xs">Theme</span>
-                </div>
+                <a href="/playlists" className="flex flex-col items-center p-2">
+                  <ListMusic className="h-5 w-5" />
+                  <span className="text-xs">Playlists</span>
+                </a>
               </div>
               {/* Main content */}
               <div className="flex-1 overflow-y-auto pb-24">{children}</div>

@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
     provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "sqlite"
-    url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("POSTGRES_URL")
 }
 
 model Artist {
@@ -44,18 +41,25 @@ model Song {
 }
 
 model Album {
-    id          String   @id @default(cuid())
+    id          String    @id @default(cuid())
     title       String
     imageUrl    String
     artistId    String
-    artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+    artist      Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
     songs       Song[]
     releaseDate DateTime
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    type        AlbumType @default(ALBUM)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
     @@index([title])
     @@index([artistId])
+}
+
+enum AlbumType {
+    ALBUM
+    EP
+    SINGLE
 }
 
 model Playlist {

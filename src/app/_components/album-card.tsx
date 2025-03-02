@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Pause, Play } from "lucide-react";
+import { useEffect, useState } from "react";
 import { type Album, type Artist } from "@prisma/client";
 
 import { cn } from "~/lib/utils";
@@ -21,9 +22,17 @@ interface AlbumCardProps {
 export function AlbumCard({ album, className }: AlbumCardProps) {
   const { playAlbum, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
+  const [isCurrentAlbum, setIsCurrentAlbum] = useState(false);
 
-  // Check if this album is currently playing
-  const isThisAlbumPlaying = currentSong?.albumId === album.id;
+  // Check if this album is currently playing using data attributes
+  useEffect(() => {
+    const audioElement = document.querySelector("audio");
+    if (audioElement) {
+      const contextId = audioElement.getAttribute("data-context-id");
+      const contextType = audioElement.getAttribute("data-context-type");
+      setIsCurrentAlbum(contextType === "album" && contextId === album.id);
+    }
+  }, [currentSong, album.id]);
 
   // Function to fetch album with songs and play it
   const handlePlayAlbum = async (e: React.MouseEvent) => {
@@ -33,7 +42,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
     }
 
     // If this album is currently playing, just toggle play/pause
-    if (isThisAlbumPlaying) {
+    if (isCurrentAlbum) {
       void togglePlayPause();
       return;
     }
@@ -44,6 +53,14 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
       if (!response.ok) throw new Error("Failed to fetch album");
 
       const albumWithSongs = await response.json();
+
+      // Set custom data attributes on the audio element to track context
+      const audioElement = document.querySelector("audio");
+      if (audioElement) {
+        audioElement.setAttribute("data-context-id", album.id);
+        audioElement.setAttribute("data-context-type", "album");
+      }
+
       playAlbum(albumWithSongs);
     } catch (error) {
       console.error("Error playing album:", error);
@@ -66,9 +83,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
         <div
           className={cn(
             "absolute inset-0 items-center justify-center bg-black/40 transition-all",
-            isThisAlbumPlaying && isPlaying
-              ? "flex"
-              : "hidden group-hover:flex",
+            isCurrentAlbum && isPlaying ? "flex" : "hidden group-hover:flex",
           )}
         >
           <Button
@@ -77,7 +92,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
             className="z-10 h-12 w-12 text-white"
             onClick={handlePlayAlbum}
           >
-            {isThisAlbumPlaying && isPlaying ? (
+            {isCurrentAlbum && isPlaying ? (
               <Pause className="h-6 w-6" />
             ) : (
               <Play className="h-6 w-6" />
@@ -92,7 +107,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
           href={`/albums/${album.id}`}
           className={cn(
             "block font-medium leading-tight hover:underline",
-            isThisAlbumPlaying && "text-primary",
+            isCurrentAlbum && "text-primary",
           )}
         >
           {album.title}
