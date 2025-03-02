@@ -9,6 +9,8 @@ import { type Playlist } from "@prisma/client";
 import { cn } from "~/lib/utils";
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
+import { api } from "~/trpc/react";
+import { SongWithDetails } from "~/lib/store/usePlayerStore";
 
 interface PlaylistCardProps {
   playlist: Playlist;
@@ -19,6 +21,15 @@ export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
   const { playPlaylist, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
   const [isCurrentPlaylist, setIsCurrentPlaylist] = useState(false);
+
+  // Use TRPC's useQuery to prefetch the playlist data
+  const { data: playlistData } = api.playlist.getPlaylistWithSongs.useQuery(
+    { id: playlist.id },
+    {
+      // Don't refetch on window focus
+      refetchOnWindowFocus: false,
+    },
+  );
 
   // Check if a song from this playlist is currently playing by reading a custom data attribute
   // that we set on the audio element when playing a playlist
@@ -34,7 +45,7 @@ export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
   }, [currentSong, playlist.id]);
 
   // Function to fetch playlist with songs and play it
-  const handlePlayPlaylist = async (e: React.MouseEvent) => {
+  const handlePlayPlaylist = (e: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -46,13 +57,8 @@ export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
       return;
     }
 
-    // Fetch the playlist with songs from the API
-    try {
-      const response = await fetch(`/api/playlists/${playlist.id}/play`);
-      if (!response.ok) throw new Error("Failed to fetch playlist");
-
-      const playlistWithSongs = await response.json();
-
+    // If we have the playlist data, play it
+    if (playlistData) {
       // Set custom data attributes on the audio element to track context
       const audioElement = document.querySelector("audio");
       if (audioElement) {
@@ -60,9 +66,13 @@ export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
         audioElement.setAttribute("data-context-type", "playlist");
       }
 
+      // Convert the API response to the format required by playPlaylist
+      const playlistWithSongs: Playlist & { songs: SongWithDetails[] } = {
+        ...playlistData,
+        songs: playlistData.songs,
+      };
+
       playPlaylist(playlistWithSongs);
-    } catch (error) {
-      console.error("Error playing playlist:", error);
     }
   };
 

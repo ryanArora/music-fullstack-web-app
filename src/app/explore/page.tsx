@@ -11,11 +11,17 @@ export const metadata: Metadata = {
 };
 
 export default async function ExplorePage() {
-  // Fetch all the data we need for the explore page
-  const songs = await api.song.getAll();
-  const albums = await api.album.getAll();
-  const artists = await api.artist.getAll();
-  const playlists = await api.playlist.getAll();
+  // Fetch all the data we need for the explore page with limits
+  const songsResponse = await api.song.getAll({ limit: 10 });
+  const albumsResponse = await api.album.getAll({ limit: 20 });
+  const artistsResponse = await api.artist.getAll({ limit: 20 });
+  const playlistsResponse = await api.playlist.getAll({ limit: 20 });
+
+  // Extract the items from the paginated responses
+  const songs = songsResponse.items;
+  const albums = albumsResponse.items;
+  const artists = artistsResponse.items;
+  const playlists = playlistsResponse.items;
 
   return (
     <HydrateClient>
@@ -27,14 +33,14 @@ export default async function ExplorePage() {
           </p>
         </div>
 
+        <AlbumCarousel title="Popular Albums" albums={albums} />
+
         <section className="mb-10">
           <h2 className="mb-4 text-2xl font-bold">Featured Songs</h2>
           <div className="space-y-2">
-            <SongList songs={songs.slice(0, 5)} />
+            <SongList songs={songs} />
           </div>
         </section>
-
-        <AlbumCarousel title="Popular Albums" albums={albums} />
 
         <ArtistCarousel title="Top Artists" artists={artists} />
 

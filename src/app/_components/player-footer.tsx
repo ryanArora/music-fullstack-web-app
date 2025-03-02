@@ -69,7 +69,6 @@ export function PlayerFooter() {
       { songId: currentSong?.id ?? "" },
       {
         enabled: !!currentSong && !!session,
-        staleTime: 1000 * 60 * 5, // 5 minutes
       },
     );
 

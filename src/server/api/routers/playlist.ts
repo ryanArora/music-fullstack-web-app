@@ -9,16 +9,46 @@ import {
 
 export const playlistRouter = createTRPCRouter({
   // Public procedures
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.db.playlist.findMany({
-      where: {
-        isPublic: true,
-      },
-      orderBy: {
-        title: "asc",
-      },
-    });
-  }),
+  getAll: publicProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).nullish(),
+        cursor: z.string().nullish(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const limit = input?.limit ?? 20;
+      const cursor = input?.cursor;
+
+      const playlists = await ctx.db.playlist.findMany({
+        where: {
+          isPublic: true,
+        },
+        orderBy: {
+          id: "asc",
+        },
+        take: limit + 1,
+        ...(cursor
+          ? {
+              cursor: {
+                id: cursor,
+              },
+              skip: 1, // Skip the cursor
+            }
+          : {}),
+      });
+
+      let nextCursor: typeof cursor | undefined = undefined;
+      if (playlists.length > limit) {
+        const nextItem = playlists.pop();
+        nextCursor = nextItem?.id;
+      }
+
+      return {
+        items: playlists,
+        nextCursor,
+      };
+    }),
 
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
@@ -67,6 +97,59 @@ export const playlistRouter = createTRPCRouter({
       }
 
       return playlist;
+    }),
+
+  getPlaylistWithSongs: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const playlist = await ctx.db.playlist.findUnique({
+        where: {
+          id: input.id,
+        },
+        include: {
+          songs: {
+            include: {
+              song: {
+                include: {
+                  artist: true,
+                  album: true,
+                },
+              },
+            },
+            orderBy: {
+              order: "asc",
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
+      });
+
+      if (!playlist) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Playlist not found",
+        });
+      }
+
+      // Only return if public or owned by the current user
+      if (!playlist.isPublic && playlist.userId !== ctx.session?.user?.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to view this playlist",
+        });
+      }
+
+      // Transform to expected format for the player
+      return {
+        ...playlist,
+        songs: playlist.songs.map((songEntry) => songEntry.song),
+      };
     }),
 
   // Protected procedures (requires authentication)

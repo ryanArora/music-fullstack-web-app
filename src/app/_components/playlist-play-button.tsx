@@ -4,6 +4,9 @@ import { Pause, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { Button } from "~/app/_components/ui/button";
+import { api } from "~/trpc/react";
+import type { Playlist } from "@prisma/client";
+import type { SongWithDetails } from "~/lib/store/usePlayerStore";
 
 interface PlaylistPlayButtonProps {
   playlistId: string;
@@ -13,6 +16,11 @@ export function PlaylistPlayButton({ playlistId }: PlaylistPlayButtonProps) {
   const { playPlaylist, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
   const [isCurrentPlaylist, setIsCurrentPlaylist] = useState(false);
+
+  // Use TRPC's useQuery to prefetch the playlist data
+  const { data: playlistData } = api.playlist.getPlaylistWithSongs.useQuery({
+    id: playlistId,
+  });
 
   // Check if this playlist is currently playing using data attributes
   useEffect(() => {
@@ -26,20 +34,15 @@ export function PlaylistPlayButton({ playlistId }: PlaylistPlayButtonProps) {
     }
   }, [currentSong, playlistId]);
 
-  const handlePlay = async () => {
+  const handlePlay = () => {
     // If this playlist is currently playing, just toggle play/pause
     if (isCurrentPlaylist) {
       void togglePlayPause();
       return;
     }
 
-    try {
-      // Fetch the playlist with songs from the API
-      const response = await fetch(`/api/playlists/${playlistId}/play`);
-      if (!response.ok) throw new Error("Failed to fetch playlist");
-
-      const playlistWithSongs = await response.json();
-
+    // If we have the playlist data, play it
+    if (playlistData) {
       // Set custom data attributes on the audio element to track context
       const audioElement = document.querySelector("audio");
       if (audioElement) {
@@ -47,9 +50,13 @@ export function PlaylistPlayButton({ playlistId }: PlaylistPlayButtonProps) {
         audioElement.setAttribute("data-context-type", "playlist");
       }
 
+      // Convert the API response to the format required by playPlaylist
+      const playlistWithSongs: Playlist & { songs: SongWithDetails[] } = {
+        ...playlistData,
+        songs: playlistData.songs,
+      };
+
       playPlaylist(playlistWithSongs);
-    } catch (error) {
-      console.error("Error playing playlist:", error);
     }
   };
 

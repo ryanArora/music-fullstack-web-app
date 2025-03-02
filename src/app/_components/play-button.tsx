@@ -3,6 +3,9 @@
 import { Pause, Play } from "lucide-react";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { Button } from "~/app/_components/ui/button";
+import { api } from "~/trpc/react";
+import type { Album } from "@prisma/client";
+import type { SongWithDetails } from "~/lib/store/usePlayerStore";
 
 interface PlayButtonProps {
   albumId: string;
@@ -12,25 +15,43 @@ export function PlayButton({ albumId }: PlayButtonProps) {
   const { playAlbum, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
 
+  // Use TRPC's useQuery to prefetch the album data
+  const { data: albumData } = api.album.getAlbumWithSongs.useQuery({
+    id: albumId,
+  });
+
   // Check if this album is currently playing
   const isThisAlbumPlaying = currentSong?.albumId === albumId;
 
-  const handlePlay = async () => {
+  const handlePlay = () => {
     // If this album is currently playing, just toggle play/pause
     if (isThisAlbumPlaying) {
       void togglePlayPause();
       return;
     }
 
-    try {
-      // Fetch the album with songs from the API
-      const response = await fetch(`/api/albums/${albumId}/play`);
-      if (!response.ok) throw new Error("Failed to fetch album");
+    // If we have the album data, play it
+    if (albumData) {
+      // Convert API response to the format required by playAlbum
+      const albumWithSongs: Album & { songs: SongWithDetails[] } = {
+        ...albumData,
+        songs: albumData.songs.map((song) => ({
+          ...song,
+          // Ensure each song has the album property set
+          album: {
+            id: albumData.id,
+            title: albumData.title,
+            imageUrl: albumData.imageUrl,
+            artistId: albumData.artistId,
+            releaseDate: albumData.releaseDate,
+            type: albumData.type,
+            createdAt: albumData.createdAt,
+            updatedAt: albumData.updatedAt,
+          },
+        })),
+      };
 
-      const albumWithSongs = await response.json();
       playAlbum(albumWithSongs);
-    } catch (error) {
-      console.error("Error playing album:", error);
     }
   };
 

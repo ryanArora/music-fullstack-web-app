@@ -9,6 +9,8 @@ import { type Album, type Artist } from "@prisma/client";
 import { cn } from "~/lib/utils";
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
+import { api } from "~/trpc/react";
+import { SongWithDetails } from "~/lib/store/usePlayerStore";
 
 interface AlbumWithArtist extends Album {
   artist: Artist;
@@ -24,6 +26,11 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
     usePlayerStore();
   const [isCurrentAlbum, setIsCurrentAlbum] = useState(false);
 
+  // Use TRPC's useQuery to prefetch the album data
+  const { data: albumData } = api.album.getAlbumWithSongs.useQuery({
+    id: album.id,
+  });
+
   // Check if this album is currently playing using data attributes
   useEffect(() => {
     const audioElement = document.querySelector("audio");
@@ -35,7 +42,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
   }, [currentSong, album.id]);
 
   // Function to fetch album with songs and play it
-  const handlePlayAlbum = async (e: React.MouseEvent) => {
+  const handlePlayAlbum = (e: React.MouseEvent) => {
     if (e) {
       e.preventDefault(); // Prevent any default behavior
       e.stopPropagation(); // Stop event propagation
@@ -47,13 +54,8 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
       return;
     }
 
-    // Fetch the album with songs from the API
-    try {
-      const response = await fetch(`/api/albums/${album.id}/play`);
-      if (!response.ok) throw new Error("Failed to fetch album");
-
-      const albumWithSongs = await response.json();
-
+    // If we have the album data, play it
+    if (albumData) {
       // Set custom data attributes on the audio element to track context
       const audioElement = document.querySelector("audio");
       if (audioElement) {
@@ -61,9 +63,26 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
         audioElement.setAttribute("data-context-type", "album");
       }
 
+      // Convert API response to the format required by playAlbum
+      const albumWithSongs: Album & { songs: SongWithDetails[] } = {
+        ...albumData,
+        songs: albumData.songs.map((song) => ({
+          ...song,
+          // Ensure each song has the album property set
+          album: {
+            id: albumData.id,
+            title: albumData.title,
+            imageUrl: albumData.imageUrl,
+            artistId: albumData.artistId,
+            releaseDate: albumData.releaseDate,
+            type: albumData.type,
+            createdAt: albumData.createdAt,
+            updatedAt: albumData.updatedAt,
+          },
+        })),
+      };
+
       playAlbum(albumWithSongs);
-    } catch (error) {
-      console.error("Error playing album:", error);
     }
   };
 

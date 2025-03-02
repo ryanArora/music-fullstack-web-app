@@ -70,7 +70,11 @@ async function main() {
   console.log(`Preparing ${ARTIST_COUNT} artists...`);
   const artistsData = Array.from({ length: ARTIST_COUNT }).map(() => ({
     name: faker.person.fullName(),
-    imageUrl: faker.image.urlLoremFlickr({ height: 400, width: 400 }),
+    imageUrl: faker.image.urlPicsumPhotos({
+      width: 400,
+      height: 400,
+      blur: 0,
+    }),
   }));
 
   // Create artists in a batch
@@ -96,7 +100,11 @@ async function main() {
 
       return {
         title: faker.music.songName(),
-        imageUrl: faker.image.urlLoremFlickr({ height: 400, width: 400 }),
+        imageUrl: faker.image.urlPicsumPhotos({
+          height: 400,
+          width: 400,
+          blur: 0,
+        }),
         artistId: artist.id,
         releaseDate: releaseDate,
       };
@@ -154,7 +162,11 @@ async function main() {
 
     return {
       title: playlistName,
-      imageUrl: faker.image.urlLoremFlickr({ height: 400, width: 400 }),
+      imageUrl: faker.image.urlPicsumPhotos({
+        height: 400,
+        width: 400,
+        blur: 0,
+      }),
     };
   });
 

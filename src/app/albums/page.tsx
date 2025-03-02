@@ -1,15 +1,48 @@
-import { Metadata } from "next";
+"use client";
+
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
+import { Loader2 } from "lucide-react";
 
 import { AlbumCard } from "~/app/_components/album-card";
-import { api } from "~/trpc/server";
+import { api } from "~/trpc/react";
+import type { Album, Artist } from "@prisma/client";
+import type { RouterOutputs } from "~/trpc/react";
 
-export const metadata: Metadata = {
-  title: "Albums | Music App",
-  description: "Browse all albums",
+type AlbumWithArtist = Album & {
+  artist: Artist;
 };
 
-export default async function AlbumsPage() {
-  const albums = await api.album.getAll();
+// Define the type for the API response
+type AlbumPaginatedResponse = RouterOutputs["album"]["getAll"];
+
+export default function AlbumsPage() {
+  const { ref, inView } = useInView();
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = api.album.getAll.useInfiniteQuery(
+    {
+      limit: 24,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Flatten the pages to get all albums
+  const albums = data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -18,19 +51,41 @@ export default async function AlbumsPage() {
         <p className="text-muted-foreground">Browse all albums</p>
       </div>
 
-      {albums.length === 0 ? (
+      {isLoading ? (
+        <div className="flex h-40 w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : isError ? (
+        <div className="rounded-lg border p-8 text-center">
+          <h2 className="mb-2 text-lg font-medium">Error loading albums</h2>
+          <p className="mb-4 text-muted-foreground">
+            Something went wrong while loading albums. Please try again later.
+          </p>
+        </div>
+      ) : albums.length === 0 ? (
         <div className="rounded-lg border p-8 text-center">
           <h2 className="mb-2 text-lg font-medium">No albums available</h2>
-          <p className="text-muted-foreground mb-4">
+          <p className="mb-4 text-muted-foreground">
             We don't have any albums yet. Please check back later.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {albums.map((album) => (
-            <AlbumCard key={album.id} album={album} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {albums.map((album: AlbumWithArtist) => (
+              <AlbumCard key={album.id} album={album} />
+            ))}
+          </div>
+
+          {(hasNextPage || isFetchingNextPage) && (
+            <div
+              ref={ref}
+              className="mt-8 flex h-20 w-full items-center justify-center"
+            >
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
