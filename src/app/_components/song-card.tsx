@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { Play } from "lucide-react";
 import { type Song } from "@prisma/client";
@@ -6,6 +8,7 @@ import { type Album } from "@prisma/client";
 
 import { cn } from "~/lib/utils";
 import { Button } from "~/app/_components/ui/button";
+import { usePlayerStore } from "~/lib/store/usePlayerStore";
 
 interface SongWithRelations extends Song {
   artist: Artist;
@@ -18,10 +21,16 @@ interface SongCardProps {
 }
 
 export function SongCard({ song, className }: SongCardProps) {
+  const { playSong } = usePlayerStore();
+
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
+  const handlePlay = () => {
+    playSong(song);
   };
 
   return (
@@ -39,7 +48,12 @@ export function SongCard({ song, className }: SongCardProps) {
           className="object-cover"
         />
         <div className="absolute inset-0 hidden items-center justify-center bg-black/60 group-hover:flex">
-          <Button size="icon" variant="ghost" className="h-8 w-8 text-white">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-white"
+            onClick={handlePlay}
+          >
             <Play className="h-5 w-5" />
           </Button>
         </div>

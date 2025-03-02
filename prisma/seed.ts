@@ -129,7 +129,7 @@ async function main() {
     return Array.from({ length: songCount }).map(() => ({
       title: faker.music.songName(),
       duration: getRandomInt(120, 420), // 2-7 minutes in seconds
-      url: `/songs/${faker.string.uuid()}.mp3`,
+      url: "/songs/example.mp3", // Use our actual MP3 file
       imageUrl: album.imageUrl, // Use album cover
       artistId: artist.id,
       albumId: album.id,

@@ -1,4 +1,3 @@
-import { postRouter } from "~/server/api/routers/post";
 import { songRouter } from "~/server/api/routers/song";
 import { artistRouter } from "~/server/api/routers/artist";
 import { albumRouter } from "~/server/api/routers/album";
@@ -11,7 +10,6 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  post: postRouter,
   song: songRouter,
   artist: artistRouter,
   album: albumRouter,

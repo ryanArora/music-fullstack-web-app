@@ -8,6 +8,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 import { MainNav } from "~/app/_components/main-nav";
 import { ThemeProvider } from "~/app/_components/theme-provider";
 import { ThemeToggle } from "~/app/_components/ui/theme-toggle";
+import { PlayerFooterWrapper } from "~/app/_components/player-footer-wrapper";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,7 +21,7 @@ export const metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${inter.variable}`}>
         <ThemeProvider>
-          <TRPCReactProvider cookies={cookies().toString()}>
+          <TRPCReactProvider cookies={(await cookies()).toString()}>
             <div className="flex min-h-screen">
               {/* Sidebar */}
               <div className="bg-background hidden w-64 flex-col border-r p-4 md:flex">
@@ -73,9 +74,12 @@ export default function RootLayout({
                 </div>
               </div>
               {/* Main content */}
-              <div className="flex-1 overflow-auto pb-16 md:pb-0">
+              <div className="flex-1 overflow-auto pb-20 md:pb-20">
                 {children}
               </div>
+
+              {/* Player Footer */}
+              <PlayerFooterWrapper />
             </div>
           </TRPCReactProvider>
         </ThemeProvider>
