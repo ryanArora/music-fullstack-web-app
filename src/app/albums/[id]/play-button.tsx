@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Pause, Play } from "lucide-react";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { Button } from "~/app/_components/ui/button";
 
@@ -9,12 +9,20 @@ interface PlayButtonProps {
 }
 
 export function PlayButton({ albumId }: PlayButtonProps) {
-  const { playAlbum } = usePlayerStore();
-  const [isLoading, setIsLoading] = useState(false);
+  const { playAlbum, currentSong, isPlaying, togglePlayPause } =
+    usePlayerStore();
+
+  // Check if this album is currently playing
+  const isThisAlbumPlaying = currentSong?.albumId === albumId;
 
   const handlePlay = async () => {
+    // If this album is currently playing, just toggle play/pause
+    if (isThisAlbumPlaying) {
+      void togglePlayPause();
+      return;
+    }
+
     try {
-      setIsLoading(true);
       // Fetch the album with songs from the API
       const response = await fetch(`/api/albums/${albumId}/play`);
       if (!response.ok) throw new Error("Failed to fetch album");
@@ -23,31 +31,17 @@ export function PlayButton({ albumId }: PlayButtonProps) {
       playAlbum(albumWithSongs);
     } catch (error) {
       console.error("Error playing album:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <Button
-      size="lg"
-      className="gap-2"
-      onClick={handlePlay}
-      disabled={isLoading}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className="h-5 w-5"
-      >
-        <path
-          fillRule="evenodd"
-          d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
-          clipRule="evenodd"
-        />
-      </svg>
-      {isLoading ? "Loading..." : "Play"}
+    <Button size="lg" className="gap-2" onClick={handlePlay}>
+      {isThisAlbumPlaying && isPlaying ? (
+        <Pause className="h-5 w-5" />
+      ) : (
+        <Play className="h-5 w-5" />
+      )}
+      {isThisAlbumPlaying && isPlaying ? "Pause" : "Play"}
     </Button>
   );
 }

@@ -31,9 +31,9 @@ export default async function RootLayout({
       <body className={`font-sans ${inter.variable}`}>
         <ThemeProvider>
           <TRPCReactProvider cookies={(await cookies()).toString()}>
-            <div className="flex min-h-screen">
+            <div className="flex h-screen">
               {/* Sidebar */}
-              <div className="bg-background hidden w-64 flex-col border-r p-4 md:flex">
+              <div className="bg-background hidden w-64 flex-col overflow-y-auto border-r p-4 md:flex">
                 <div className="mb-6 flex items-center justify-between px-3">
                   <div className="flex items-center gap-2">
                     <Music className="text-primary h-6 w-6" />
@@ -42,17 +42,6 @@ export default async function RootLayout({
                   <ThemeToggle />
                 </div>
                 <MainNav />
-                <div className="mt-auto p-4">
-                  <div className="bg-primary/10 flex items-center gap-3 rounded-md p-3 text-sm">
-                    <User className="h-5 w-5" />
-                    <div>
-                      <div className="font-medium">Your Account</div>
-                      <div className="text-muted-foreground text-xs">
-                        Settings & Preferences
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
               {/* Mobile bottom navigation */}
               <div className="bg-background fixed bottom-0 left-0 z-10 flex w-full items-center justify-around border-t py-2 md:hidden">
@@ -74,9 +63,7 @@ export default async function RootLayout({
                 </div>
               </div>
               {/* Main content */}
-              <div className="flex-1 overflow-auto pb-20 md:pb-20">
-                {children}
-              </div>
+              <div className="flex-1 overflow-y-auto pb-24">{children}</div>
 
               {/* Player Footer */}
               <PlayerFooterWrapper />

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { type Album, type Artist } from "@prisma/client";
 
 import { cn } from "~/lib/utils";
@@ -19,11 +19,24 @@ interface AlbumCardProps {
 }
 
 export function AlbumCard({ album, className }: AlbumCardProps) {
-  const { playAlbum } = usePlayerStore();
+  const { playAlbum, currentSong, isPlaying, togglePlayPause } =
+    usePlayerStore();
+
+  // Check if this album is currently playing
+  const isThisAlbumPlaying = currentSong?.albumId === album.id;
 
   // Function to fetch album with songs and play it
   const handlePlayAlbum = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation when clicking the play button
+    if (e) {
+      e.preventDefault(); // Prevent any default behavior
+      e.stopPropagation(); // Stop event propagation
+    }
+
+    // If this album is currently playing, just toggle play/pause
+    if (isThisAlbumPlaying) {
+      void togglePlayPause();
+      return;
+    }
 
     // Fetch the album with songs from the API
     try {
@@ -38,34 +51,59 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
   };
 
   return (
-    <Link
-      href={`/albums/${album.id}`}
-      className={cn(
-        "group block space-y-3 transition-opacity hover:opacity-90",
-        className,
-      )}
-    >
-      <div className="relative aspect-square overflow-hidden rounded-md">
+    <div className={cn("block space-y-3", className)}>
+      {/* Image and play controls - NOT wrapped in Link */}
+      <div
+        className="group relative aspect-square cursor-pointer overflow-hidden rounded-md"
+        onClick={handlePlayAlbum}
+      >
         <Image
           src={album.imageUrl}
           alt={album.title}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <div className="absolute inset-0 hidden items-center justify-center bg-black/40 transition-all group-hover:flex">
+        <div
+          className={cn(
+            "absolute inset-0 items-center justify-center bg-black/40 transition-all",
+            isThisAlbumPlaying && isPlaying
+              ? "flex"
+              : "hidden group-hover:flex",
+          )}
+        >
           <Button
             size="icon"
-            className="z-10 h-12 w-12"
+            variant="none"
+            className="z-10 h-12 w-12 text-white"
             onClick={handlePlayAlbum}
           >
-            <Play className="h-6 w-6" />
+            {isThisAlbumPlaying && isPlaying ? (
+              <Pause className="h-6 w-6" />
+            ) : (
+              <Play className="h-6 w-6" />
+            )}
           </Button>
         </div>
       </div>
+
+      {/* Album title and artist info - wrapped in Link */}
       <div className="space-y-1">
-        <h3 className="font-medium leading-tight">{album.title}</h3>
-        <p className="text-muted-foreground text-sm">{album.artist.name}</p>
+        <Link
+          href={`/albums/${album.id}`}
+          className={cn(
+            "block font-medium leading-tight hover:underline",
+            isThisAlbumPlaying && "text-primary",
+          )}
+        >
+          {album.title}
+        </Link>
+        <Link
+          href={`/artists/${album.artistId}`}
+          className="text-muted-foreground text-sm hover:underline"
+        >
+          {album.artist.name}
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
