@@ -1,6 +1,19 @@
 import { z } from "zod";
-
+import { Prisma } from "@prisma/client";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+
+export const albumInclude = {
+  artist: true,
+  songs: {
+    include: {
+      artist: true,
+      album: true,
+    },
+    orderBy: {
+      title: "asc",
+    },
+  },
+} satisfies Prisma.AlbumInclude;
 
 export const albumRouter = createTRPCRouter({
   getAll: publicProcedure
@@ -15,9 +28,7 @@ export const albumRouter = createTRPCRouter({
       const cursor = input?.cursor;
 
       const albums = await ctx.db.album.findMany({
-        include: {
-          artist: true,
-        },
+        include: albumInclude,
         orderBy: {
           id: "asc",
         },
@@ -46,45 +57,13 @@ export const albumRouter = createTRPCRouter({
 
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(({ ctx, input }) => {
-      return ctx.db.album.findUnique({
-        where: {
-          id: input.id,
-        },
-        include: {
-          artist: true,
-          songs: {
-            orderBy: {
-              title: "asc",
-            },
-          },
-        },
-      });
-    }),
-
-  getAlbumWithSongs: publicProcedure
-    .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const album = await ctx.db.album.findUnique({
+      const album = await ctx.db.album.findUniqueOrThrow({
         where: {
           id: input.id,
         },
-        include: {
-          artist: true,
-          songs: {
-            include: {
-              artist: true,
-            },
-            orderBy: {
-              title: "asc",
-            },
-          },
-        },
+        include: albumInclude,
       });
-
-      if (!album) {
-        throw new Error("Album not found");
-      }
 
       return album;
     }),
@@ -96,10 +75,7 @@ export const albumRouter = createTRPCRouter({
         where: {
           artistId: input.artistId,
         },
-        include: {
-          artist: true,
-          songs: true,
-        },
+        include: albumInclude,
         orderBy: {
           releaseDate: "desc",
         },

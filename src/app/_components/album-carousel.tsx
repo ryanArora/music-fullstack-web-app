@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { type Album, type Artist } from "@prisma/client";
 import {
   Carousel,
   CarouselContent,
@@ -10,14 +9,11 @@ import {
   CarouselPrevious,
 } from "~/app/_components/ui/carousel";
 import { AlbumCard } from "~/app/_components/album-card";
-
-interface AlbumWithArtist extends Album {
-  artist: Artist;
-}
+import { RouterOutputs } from "~/trpc/react";
 
 interface AlbumCarouselProps {
   title: string;
-  albums: AlbumWithArtist[];
+  albums: RouterOutputs["album"]["getById"][];
   emptyMessage?: string;
 }
 

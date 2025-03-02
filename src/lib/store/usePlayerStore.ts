@@ -1,19 +1,11 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import {
-  type Song,
-  type Album,
-  type Artist,
-  type Playlist,
-} from "@prisma/client";
-
-export interface SongWithDetails extends Song {
-  artist: Artist;
-  album: Album | null;
-}
+import { RouterOutputs } from "~/trpc/react";
 
 // Define repeat mode enum
 export type RepeatMode = "off" | "all" | "one";
+
+export type SongWithDetails = RouterOutputs["song"]["getById"];
 
 interface PlayerState {
   // Current state
@@ -38,8 +30,8 @@ interface PlayerState {
 
   // Methods
   playSong: (song: SongWithDetails, songs?: SongWithDetails[]) => void;
-  playAlbum: (album: Album & { songs: SongWithDetails[] }) => void;
-  playPlaylist: (playlist: Playlist & { songs: SongWithDetails[] }) => void;
+  playAlbum: (album: RouterOutputs["album"]["getById"]) => void;
+  playPlaylist: (playlist: RouterOutputs["playlist"]["getById"]) => void;
   togglePlayPause: () => Promise<void>;
   setVolume: (volume: number) => void;
   toggleMute: () => void;
@@ -186,7 +178,9 @@ export const usePlayerStore = create<PlayerState>()(
           const state = get();
           const newQueue = songs.length > 0 ? [...songs] : [song];
           const newIndex =
-            songs.length > 0 ? newQueue.findIndex((s) => s.id === song.id) : 0;
+            songs.length > 0
+              ? newQueue.findIndex((s) => s?.id === song?.id)
+              : 0;
 
           set({
             queue: newQueue,
@@ -205,19 +199,19 @@ export const usePlayerStore = create<PlayerState>()(
         playAlbum: (album) => {
           if (album.songs.length === 0) return;
 
-          const firstSong = album.songs[0];
-          if (firstSong) {
-            get().playSong(firstSong, album.songs);
-          }
+          const firstSong = album.songs[0]!;
+          get().playSong(firstSong, album.songs);
         },
 
         // Play all songs from a playlist
         playPlaylist: (playlist) => {
           if (playlist.songs.length === 0) return;
 
-          const firstSong = playlist.songs[0];
+          // Extract the song objects from the playlist songs array
+          const songs = playlist.songs.map((item) => item.song);
+          const firstSong = songs[0];
           if (firstSong) {
-            get().playSong(firstSong, playlist.songs);
+            get().playSong(firstSong, songs);
           }
         },
 
@@ -400,7 +394,7 @@ export const usePlayerStore = create<PlayerState>()(
             const newOriginalQueue = [...state.originalQueue];
             // Find the corresponding song in the original queue
             const originalIndex = newOriginalQueue.findIndex(
-              (s) => s.id === songToRemove.id,
+              (s) => s?.id === songToRemove.id,
             );
             if (originalIndex !== -1) {
               newOriginalQueue.splice(originalIndex, 1);
@@ -452,7 +446,7 @@ export const usePlayerStore = create<PlayerState>()(
             if (currentSong) {
               const currentSongId = currentSong.id;
               const newIndex = originalQueue.findIndex(
-                (song) => song.id === currentSongId,
+                (song) => song?.id === currentSongId,
               );
               set({
                 queue: [...originalQueue],

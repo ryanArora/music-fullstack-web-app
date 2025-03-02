@@ -1,11 +1,35 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { Prisma } from "@prisma/client";
 
 import {
   createTRPCRouter,
   publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
+
+const include = {
+  songs: {
+    include: {
+      song: {
+        include: {
+          artist: true,
+          album: true,
+        },
+      },
+    },
+    orderBy: {
+      order: "asc",
+    },
+  },
+  user: {
+    select: {
+      id: true,
+      name: true,
+      image: true,
+    },
+  },
+} satisfies Prisma.PlaylistInclude;
 
 export const playlistRouter = createTRPCRouter({
   // Public procedures
@@ -36,6 +60,7 @@ export const playlistRouter = createTRPCRouter({
               skip: 1, // Skip the cursor
             }
           : {}),
+        include,
       });
 
       let nextCursor: typeof cursor | undefined = undefined;
@@ -53,32 +78,11 @@ export const playlistRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const playlist = await ctx.db.playlist.findUnique({
+      const playlist = await ctx.db.playlist.findUniqueOrThrow({
         where: {
           id: input.id,
         },
-        include: {
-          songs: {
-            include: {
-              song: {
-                include: {
-                  artist: true,
-                  album: true,
-                },
-              },
-            },
-            orderBy: {
-              order: "asc",
-            },
-          },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-        },
+        include,
       });
 
       if (!playlist) {
@@ -99,65 +103,13 @@ export const playlistRouter = createTRPCRouter({
       return playlist;
     }),
 
-  getPlaylistWithSongs: publicProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const playlist = await ctx.db.playlist.findUnique({
-        where: {
-          id: input.id,
-        },
-        include: {
-          songs: {
-            include: {
-              song: {
-                include: {
-                  artist: true,
-                  album: true,
-                },
-              },
-            },
-            orderBy: {
-              order: "asc",
-            },
-          },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-        },
-      });
-
-      if (!playlist) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Playlist not found",
-        });
-      }
-
-      // Only return if public or owned by the current user
-      if (!playlist.isPublic && playlist.userId !== ctx.session?.user?.id) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You don't have permission to view this playlist",
-        });
-      }
-
-      // Transform to expected format for the player
-      return {
-        ...playlist,
-        songs: playlist.songs.map((songEntry) => songEntry.song),
-      };
-    }),
-
   // Protected procedures (requires authentication)
   getUserPlaylists: protectedProcedure.query(({ ctx }) => {
     return ctx.db.playlist.findMany({
       where: {
         userId: ctx.session.user.id,
       },
+      include,
       orderBy: [
         { isLiked: "desc" }, // Liked songs first
         { title: "asc" }, // Then by title
@@ -193,17 +145,10 @@ export const playlistRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // Verify ownership
-      const playlist = await ctx.db.playlist.findUnique({
+      const playlist = await ctx.db.playlist.findUniqueOrThrow({
         where: { id: input.id },
         select: { userId: true, isLiked: true },
       });
-
-      if (!playlist) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Playlist not found",
-        });
-      }
 
       if (playlist.userId !== ctx.session.user.id) {
         throw new TRPCError({
@@ -233,17 +178,10 @@ export const playlistRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Verify ownership and prevent deletion of Liked Songs
-      const playlist = await ctx.db.playlist.findUnique({
+      const playlist = await ctx.db.playlist.findUniqueOrThrow({
         where: { id: input.id },
         select: { userId: true, isLiked: true },
       });
-
-      if (!playlist) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Playlist not found",
-        });
-      }
 
       if (playlist.userId !== ctx.session.user.id) {
         throw new TRPCError({
@@ -273,17 +211,10 @@ export const playlistRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // Verify ownership
-      const playlist = await ctx.db.playlist.findUnique({
+      const playlist = await ctx.db.playlist.findUniqueOrThrow({
         where: { id: input.playlistId },
         include: { songs: true },
       });
-
-      if (!playlist) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Playlist not found",
-        });
-      }
 
       if (playlist.userId !== ctx.session.user.id) {
         throw new TRPCError({
@@ -305,14 +236,10 @@ export const playlistRouter = createTRPCRouter({
       }
 
       // Get the song to use its image if playlist has no image
-      const song = await ctx.db.song.findUnique({
+      const song = await ctx.db.song.findUniqueOrThrow({
         where: { id: input.songId },
         select: { imageUrl: true },
       });
-
-      if (!song) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Song not found" });
-      }
 
       // Get the highest order value
       const highestOrder =
@@ -347,17 +274,10 @@ export const playlistRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // Verify ownership
-      const playlist = await ctx.db.playlist.findUnique({
+      const playlist = await ctx.db.playlist.findUniqueOrThrow({
         where: { id: input.playlistId },
         select: { userId: true },
       });
-
-      if (!playlist) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Playlist not found",
-        });
-      }
 
       if (playlist.userId !== ctx.session.user.id) {
         throw new TRPCError({
@@ -428,14 +348,10 @@ export const playlistRouter = createTRPCRouter({
         return { liked: false };
       } else {
         // Like - add to playlist
-        const song = await ctx.db.song.findUnique({
+        const song = await ctx.db.song.findUniqueOrThrow({
           where: { id: input.songId },
           select: { imageUrl: true },
         });
-
-        if (!song) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Song not found" });
-        }
 
         // Update playlist image if it doesn't have one
         if (!likedPlaylist.imageUrl) {

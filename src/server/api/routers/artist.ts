@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { albumInclude } from "./album";
 
 export const artistRouter = createTRPCRouter({
   getAll: publicProcedure
@@ -43,7 +44,7 @@ export const artistRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(({ ctx, input }) => {
-      return ctx.db.artist.findUnique({
+      return ctx.db.artist.findUniqueOrThrow({
         where: {
           id: input.id,
         },
@@ -98,14 +99,12 @@ export const artistRouter = createTRPCRouter({
       return ctx.db.album.findMany({
         where: {
           artistId: input.artistId,
-          type: input.type as any, // Type casting to handle enum
+          type: input.type,
         },
         orderBy: {
           releaseDate: "desc",
         },
-        include: {
-          songs: true,
-        },
+        include: albumInclude,
       });
     }),
 });

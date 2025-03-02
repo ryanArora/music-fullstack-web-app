@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { type Playlist } from "@prisma/client";
 import {
   Carousel,
   CarouselContent,
@@ -10,10 +9,11 @@ import {
   CarouselPrevious,
 } from "~/app/_components/ui/carousel";
 import { PlaylistCard } from "~/app/_components/playlist-card";
+import { RouterOutputs } from "~/trpc/react";
 
 interface PlaylistCarouselProps {
   title: string;
-  playlists: Playlist[];
+  playlists: RouterOutputs["playlist"]["getById"][];
   emptyMessage?: string;
 }
 

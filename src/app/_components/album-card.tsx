@@ -3,50 +3,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Pause, Play } from "lucide-react";
-import { useEffect, useState } from "react";
-import { type Album, type Artist } from "@prisma/client";
+import { useState } from "react";
 
 import { cn } from "~/lib/utils";
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
-import { api } from "~/trpc/react";
-import { SongWithDetails } from "~/lib/store/usePlayerStore";
-
-interface AlbumWithArtist extends Album {
-  artist: Artist;
-}
+import { RouterOutputs } from "~/trpc/react";
 
 interface AlbumCardProps {
-  album: AlbumWithArtist;
+  album: RouterOutputs["album"]["getById"];
   className?: string;
 }
 
 export function AlbumCard({ album, className }: AlbumCardProps) {
   const { playAlbum, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
-  const [isCurrentAlbum, setIsCurrentAlbum] = useState(false);
 
-  // Use TRPC's useQuery to prefetch the album data
-  const { data: albumData } = api.album.getAlbumWithSongs.useQuery({
-    id: album.id,
-  });
-
-  // Check if this album is currently playing using data attributes
-  useEffect(() => {
-    const audioElement = document.querySelector("audio");
-    if (audioElement) {
-      const contextId = audioElement.getAttribute("data-context-id");
-      const contextType = audioElement.getAttribute("data-context-type");
-      setIsCurrentAlbum(contextType === "album" && contextId === album.id);
-    }
-  }, [currentSong, album.id]);
+  const isCurrentAlbum = currentSong?.albumId === album.id;
 
   // Function to fetch album with songs and play it
   const handlePlayAlbum = (e: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault(); // Prevent any default behavior
-      e.stopPropagation(); // Stop event propagation
-    }
+    e.preventDefault(); // Prevent any default behavior
+    e.stopPropagation(); // Stop event propagation
 
     // If this album is currently playing, just toggle play/pause
     if (isCurrentAlbum) {
@@ -54,36 +32,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
       return;
     }
 
-    // If we have the album data, play it
-    if (albumData) {
-      // Set custom data attributes on the audio element to track context
-      const audioElement = document.querySelector("audio");
-      if (audioElement) {
-        audioElement.setAttribute("data-context-id", album.id);
-        audioElement.setAttribute("data-context-type", "album");
-      }
-
-      // Convert API response to the format required by playAlbum
-      const albumWithSongs: Album & { songs: SongWithDetails[] } = {
-        ...albumData,
-        songs: albumData.songs.map((song) => ({
-          ...song,
-          // Ensure each song has the album property set
-          album: {
-            id: albumData.id,
-            title: albumData.title,
-            imageUrl: albumData.imageUrl,
-            artistId: albumData.artistId,
-            releaseDate: albumData.releaseDate,
-            type: albumData.type,
-            createdAt: albumData.createdAt,
-            updatedAt: albumData.updatedAt,
-          },
-        })),
-      };
-
-      playAlbum(albumWithSongs);
-    }
+    playAlbum(album);
   };
 
   return (
@@ -108,7 +57,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
           <Button
             size="icon"
             variant="none"
-            className="z-10 h-12 w-12 text-white"
+            className="h-12 w-12 text-white"
             onClick={handlePlayAlbum}
           >
             {isCurrentAlbum && isPlaying ? (
@@ -133,7 +82,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
         </Link>
         <Link
           href={`/artists/${album.artistId}`}
-          className="text-muted-foreground text-sm hover:underline"
+          className="text-sm text-muted-foreground hover:underline"
         >
           {album.artist.name}
         </Link>

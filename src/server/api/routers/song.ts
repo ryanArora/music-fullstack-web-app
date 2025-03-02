@@ -50,7 +50,7 @@ export const songRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(({ ctx, input }) => {
-      return ctx.db.song.findUnique({
+      return ctx.db.song.findUniqueOrThrow({
         where: {
           id: input.id,
         },

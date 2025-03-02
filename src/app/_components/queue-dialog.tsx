@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { Music, X } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { Button } from "~/app/_components/ui/button";
@@ -12,10 +11,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
 } from "~/app/_components/ui/dialog";
 import { ScrollArea } from "~/app/_components/ui/scroll-area";
-import { cn } from "~/lib/utils";
 
 interface QueueDialogProps {
   open: boolean;
@@ -50,7 +47,7 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
           {currentSong && (
             <div className="mb-4">
               <h3 className="mb-2 text-sm font-medium">Now Playing</h3>
-              <div className="hover:bg-accent/50 flex items-center gap-3 rounded-md p-2">
+              <div className="flex items-center gap-3 rounded-md p-2 hover:bg-accent/50">
                 <div className="relative h-12 w-12 overflow-hidden rounded-md">
                   <Image
                     src={currentSong.imageUrl}
@@ -63,11 +60,11 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                   <div className="line-clamp-1 font-medium">
                     {currentSong.title}
                   </div>
-                  <div className="text-muted-foreground line-clamp-1 text-sm">
+                  <div className="line-clamp-1 text-sm text-muted-foreground">
                     {currentSong.artist.name}
                   </div>
                 </div>
-                <div className="text-muted-foreground text-sm">
+                <div className="text-sm text-muted-foreground">
                   {formatDuration(currentSong.duration)}
                 </div>
               </div>
@@ -82,7 +79,7 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                 {upNext.map((song, index) => (
                   <div
                     key={`${song.id}-${index}`}
-                    className="hover:bg-accent/50 flex items-center gap-3 rounded-md p-2"
+                    className="flex items-center gap-3 rounded-md p-2 hover:bg-accent/50"
                   >
                     <Button
                       variant="ghost"
@@ -104,11 +101,11 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                       <div className="line-clamp-1 text-sm font-medium">
                         {song.title}
                       </div>
-                      <div className="text-muted-foreground line-clamp-1 text-xs">
+                      <div className="line-clamp-1 text-xs text-muted-foreground">
                         {song.artist.name}
                       </div>
                     </div>
-                    <div className="text-muted-foreground text-sm">
+                    <div className="text-sm text-muted-foreground">
                       {formatDuration(song.duration)}
                     </div>
                     <Button
@@ -123,7 +120,7 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                 ))}
               </ScrollArea>
             ) : (
-              <div className="text-muted-foreground flex items-center justify-center py-8 text-center">
+              <div className="flex items-center justify-center py-8 text-center text-muted-foreground">
                 <div>
                   <Music className="mx-auto mb-2 h-10 w-10 opacity-50" />
                   <p className="text-sm">No songs in the queue</p>

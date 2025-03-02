@@ -6,15 +6,6 @@ import { Loader2 } from "lucide-react";
 
 import { AlbumCard } from "~/app/_components/album-card";
 import { api } from "~/trpc/react";
-import type { Album, Artist } from "@prisma/client";
-import type { RouterOutputs } from "~/trpc/react";
-
-type AlbumWithArtist = Album & {
-  artist: Artist;
-};
-
-// Define the type for the API response
-type AlbumPaginatedResponse = RouterOutputs["album"]["getAll"];
 
 export default function AlbumsPage() {
   const { ref, inView } = useInView();
@@ -72,7 +63,7 @@ export default function AlbumsPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {albums.map((album: AlbumWithArtist) => (
+            {albums.map((album) => (
               <AlbumCard key={album.id} album={album} />
             ))}
           </div>

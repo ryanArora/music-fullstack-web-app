@@ -67,12 +67,12 @@ export default async function PlaylistPage({ params }: PageProps) {
         </div>
 
         <div className="flex flex-col justify-end">
-          <p className="text-muted-foreground mb-2 text-sm font-medium">
+          <p className="mb-2 text-sm font-medium text-muted-foreground">
             PLAYLIST
           </p>
           <h1 className="mb-4 text-3xl font-bold">{playlist.title}</h1>
 
-          <div className="text-muted-foreground mb-6 flex flex-wrap gap-4 text-sm">
+          <div className="mb-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               <span>Created {creationDate}</span>
@@ -88,7 +88,7 @@ export default async function PlaylistPage({ params }: PageProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <PlaylistPlayButton playlistId={playlist.id} />
+            <PlaylistPlayButton playlist={playlist} />
           </div>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default async function PlaylistPage({ params }: PageProps) {
       <div>
         <Link
           href="/playlists"
-          className="text-primary flex items-center gap-2 hover:underline"
+          className="flex items-center gap-2 text-primary hover:underline"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
