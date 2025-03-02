@@ -29,6 +29,8 @@ import {
 } from "~/app/_components/ui/tooltip";
 import { cn } from "~/lib/utils";
 import { QueueDialog } from "~/app/_components/queue-dialog";
+import { useSession } from "next-auth/react";
+import { api } from "~/trpc/react";
 
 // Define repeat mode enum
 type RepeatMode = "off" | "all" | "one";
@@ -54,9 +56,38 @@ export function PlayerFooter() {
     initAudio,
   } = usePlayerStore();
 
+  const { data: session } = useSession();
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [queueDialogOpen, setQueueDialogOpen] = useState(false);
+
+  const utils = api.useUtils();
+
+  // Fetch liked status when the song changes
+  const { data: likedStatus, isLoading: isLikedLoading } =
+    api.playlist.isLikedSong.useQuery(
+      { songId: currentSong?.id ?? "" },
+      {
+        enabled: !!currentSong && !!session,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+      },
+    );
+
+  // Toggle like mutation
+  const { mutate: toggleLike, isPending: isLiking } =
+    api.playlist.toggleLikedSong.useMutation({
+      onSuccess: () => {
+        utils.playlist.isLikedSong.invalidate({
+          songId: currentSong?.id ?? "",
+        });
+        utils.playlist.getUserPlaylists.invalidate();
+      },
+    });
+
+  const handleLikeToggle = () => {
+    if (!session || !currentSong) return;
+    toggleLike({ songId: currentSong.id });
+  };
 
   // Only show the player footer on the client side and initialize audio
   useEffect(() => {
@@ -120,9 +151,33 @@ export function PlayerFooter() {
                 {currentSong.artist.name}
               </Link>
             </div>
-            <Button variant="ghost" size="icon" className="ml-2">
-              <Heart className="h-5 w-5" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-2"
+                    onClick={handleLikeToggle}
+                    disabled={!session || isLiking || isLikedLoading}
+                  >
+                    <Heart
+                      className={cn("h-5 w-5", {
+                        "text-primary fill-primary": likedStatus?.liked,
+                        "animate-pulse": isLiking,
+                      })}
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {!session
+                    ? "Sign in to like songs"
+                    : likedStatus?.liked
+                      ? "Remove from Liked Songs"
+                      : "Add to Liked Songs"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
 
           {/* Playback controls */}

@@ -10,6 +10,11 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    // NextAuth.js environment variables
+    NEXTAUTH_SECRET: z.string().min(1),
+    NEXTAUTH_URL: z.string().url().optional(),
+    DISCORD_CLIENT_ID: z.string().min(1),
+    DISCORD_CLIENT_SECRET: z.string().min(1),
   },
   client: {},
   runtimeEnv: {
@@ -18,6 +23,10 @@ export const env = createEnv({
     POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
     POSTGRES_DB: process.env.POSTGRES_DB,
     NODE_ENV: process.env.NODE_ENV,
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
+    DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,
