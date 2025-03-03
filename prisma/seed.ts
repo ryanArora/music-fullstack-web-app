@@ -64,6 +64,8 @@ async function main() {
   await prisma.album.deleteMany();
   await prisma.artist.deleteMany();
 
+  return;
+
   console.log("Previous data cleared. Generating new data...");
 
   // Generate artists data using map

@@ -15,7 +15,7 @@ const config = {
       },
       {
         protocol: "https",
-        hostname: "loremflickr.com",
+        hostname: "lh3.googleusercontent.com",
       },
     ],
   },
