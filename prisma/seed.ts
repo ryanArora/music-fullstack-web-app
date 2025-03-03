@@ -74,6 +74,7 @@ async function main() {
       width: 400,
       height: 400,
       blur: 0,
+      grayscale: false,
     }),
   }));
 
@@ -104,6 +105,7 @@ async function main() {
           height: 400,
           width: 400,
           blur: 0,
+          grayscale: false,
         }),
         artistId: artist.id,
         releaseDate: releaseDate,
@@ -166,6 +168,7 @@ async function main() {
         height: 400,
         width: 400,
         blur: 0,
+        grayscale: false,
       }),
     };
   });
