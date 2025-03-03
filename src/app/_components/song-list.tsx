@@ -108,11 +108,26 @@ export function SongList({ songs }: SongListProps) {
                 </Button>
               </div>
               <div className="flex flex-col">
-                <span
-                  className={cn("font-medium", isCurrentSong && "text-primary")}
-                >
-                  {song.title}
-                </span>
+                {song.albumId ? (
+                  <Link
+                    href={`/albums/${song.albumId}`}
+                    className={cn(
+                      "font-medium hover:text-primary hover:underline",
+                      isCurrentSong && "text-primary",
+                    )}
+                  >
+                    {song.title}
+                  </Link>
+                ) : (
+                  <span
+                    className={cn(
+                      "font-medium",
+                      isCurrentSong && "text-primary",
+                    )}
+                  >
+                    {song.title}
+                  </span>
+                )}
                 <Link
                   href={`/artists/${song.artist.id}`}
                   className="text-sm text-muted-foreground hover:text-primary hover:underline"

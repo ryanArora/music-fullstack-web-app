@@ -134,12 +134,18 @@ export function PlayerFooter() {
               />
             </div>
             <div className="flex flex-col">
-              <Link
-                href={`/songs/${currentSong.id}`}
-                className="line-clamp-1 font-medium hover:underline"
-              >
-                {currentSong.title}
-              </Link>
+              {currentSong.albumId ? (
+                <Link
+                  href={`/albums/${currentSong.albumId}`}
+                  className="line-clamp-1 font-medium hover:underline"
+                >
+                  {currentSong.title}
+                </Link>
+              ) : (
+                <span className="line-clamp-1 font-medium">
+                  {currentSong.title}
+                </span>
+              )}
               <Link
                 href={`/artists/${currentSong.artist.id}`}
                 className="line-clamp-1 text-sm text-muted-foreground hover:underline"
