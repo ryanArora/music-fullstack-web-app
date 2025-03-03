@@ -43,6 +43,7 @@ interface PlayerState {
 
   // Queue management methods
   clearQueue: () => void;
+  playNext: (song: SongWithDetails) => void;
   addToQueue: (song: SongWithDetails) => void;
   removeFromQueue: (index: number) => void;
   jumpToQueueItem: (index: number) => void;
@@ -350,6 +351,38 @@ export const usePlayerStore = create<PlayerState>()(
             progress: 0,
             duration: 0,
           });
+        },
+
+        // Add a song to the top of the queue
+        playNext: (song) => {
+          const { queue, queueIndex } = get();
+
+          // If queue is empty, play the song immediately
+          if (queue.length === 0) {
+            set({
+              queue: [song],
+              originalQueue: [song],
+              queueIndex: 0,
+              currentSong: song,
+              isPlaying: true,
+            });
+            void playCurrentQueueItem();
+          } else {
+            // Otherwise, prepend to the beginning of the queue
+            set((state) => {
+              // Insert after the current song
+              const newQueue = [...state.queue];
+              const newOriginalQueue = [...state.originalQueue];
+
+              newQueue.splice(state.queueIndex + 1, 0, song);
+              newOriginalQueue.push(song); // Add to original queue
+
+              return {
+                queue: newQueue,
+                originalQueue: newOriginalQueue,
+              };
+            });
+          }
         },
 
         // Add a song to the queue

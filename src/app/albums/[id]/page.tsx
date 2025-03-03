@@ -101,7 +101,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
         {album.songs.length === 0 ? (
           <p className="text-muted-foreground">No songs in this album yet.</p>
         ) : (
-          <SongList songs={album.songs} />
+          <SongList albumSongs={album.songs} />
         )}
       </div>
 

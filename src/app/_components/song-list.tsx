@@ -5,58 +5,48 @@ import Link from "next/link";
 
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
-import { cn } from "~/lib/utils";
+import { cn, formatDuration } from "~/lib/utils";
 import { RouterOutputs } from "~/trpc/react";
 import { SongDropdown } from "./song-dropdown";
 
-interface SongListProps {
-  songs: RouterOutputs["song"]["getById"][];
-}
+type SongListProps =
+  | {
+      playlistId: string;
+      albumSongs?: never;
+      playlistSongs: RouterOutputs["playlist"]["getById"]["songs"];
+    }
+  | {
+      playlistId?: never;
+      albumSongs: RouterOutputs["song"]["getById"][];
+      playlistSongs?: never;
+    };
 
-export function SongList({ songs }: SongListProps) {
+export function SongList({
+  playlistId,
+  playlistSongs,
+  albumSongs,
+}: SongListProps) {
   const { playSong, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
+  const songs =
+    playlistId !== undefined
+      ? playlistSongs.map((playlistSong) => ({
+          key: playlistSong.id,
+          ...playlistSong.song,
+        }))
+      : albumSongs.map((albumSong) => ({
+          key: albumSong.id,
+          ...albumSong,
+        }));
 
   const handlePlay = (song: RouterOutputs["song"]["getById"]) => {
-    // If this song is current playing, toggle playback
     if (currentSong?.id === song.id) {
       void togglePlayPause();
       return;
     }
 
-    // Enrich the song with artist info for the player
-    const songWithDetails = {
-      ...song,
-      artist: {
-        name: song.artist.name,
-        id: song.artist.id,
-        imageUrl: "",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      album: null,
-    };
-
-    playSong(
-      songWithDetails,
-      songs.map((s) => ({
-        ...s,
-        artist: {
-          name: s.artist.name,
-          id: s.artist.id,
-          imageUrl: "",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        album: null,
-      })),
-    );
+    playSong(song);
   };
 
   return (
@@ -73,7 +63,7 @@ export function SongList({ songs }: SongListProps) {
 
           return (
             <div
-              key={song.id}
+              key={song.key}
               className={cn(
                 "group grid grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3",
                 isCurrentSong ? "bg-secondary/60" : "hover:bg-secondary/40",
@@ -144,7 +134,11 @@ export function SongList({ songs }: SongListProps) {
                 >
                   {formatDuration(song.duration)}
                 </span>
-                <SongDropdown className="invisible absolute right-0 text-muted-foreground group-hover:visible" />
+                <SongDropdown
+                  className="invisible absolute right-0 text-muted-foreground group-hover:visible"
+                  song={song}
+                  playlistId={playlistId}
+                />
               </div>
             </div>
           );

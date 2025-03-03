@@ -38,7 +38,7 @@ export default async function ExplorePage() {
         <section className="mb-10">
           <h2 className="mb-4 text-2xl font-bold">Featured Songs</h2>
           <div className="space-y-2">
-            <SongList songs={songs} />
+            <SongList albumSongs={songs} />
           </div>
         </section>
 

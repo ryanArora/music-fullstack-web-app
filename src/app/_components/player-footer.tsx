@@ -183,7 +183,7 @@ export function PlayerFooter() {
               </Link>
             </div>
             <div className="flex items-center">
-              <SongDropdown />
+              <SongDropdown song={currentSong} />
             </div>
           </div>
 

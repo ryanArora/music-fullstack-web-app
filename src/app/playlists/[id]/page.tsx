@@ -17,7 +17,7 @@ interface PageProps {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const playlist = await api.playlist.getById({ id: params.id });
+  const playlist = await api.playlist.getById({ id: (await params).id });
 
   if (!playlist) {
     return {
@@ -32,7 +32,7 @@ export async function generateMetadata({
 }
 
 export default async function PlaylistPage({ params }: PageProps) {
-  const playlist = await api.playlist.getById({ id: params.id });
+  const playlist = await api.playlist.getById({ id: (await params).id });
 
   if (!playlist) {
     notFound();
@@ -103,7 +103,10 @@ export default async function PlaylistPage({ params }: PageProps) {
             </p>
           </div>
         ) : (
-          <SongList songs={songs} />
+          <SongList
+            playlistSongs={playlist.songs}
+            playlistId={(await params).id}
+          />
         )}
       </div>
 

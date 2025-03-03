@@ -50,7 +50,7 @@ export default async function ArtistDetailPage({
 
       <div className="mt-8">
         <h2 className="mb-4 text-2xl font-bold">Popular Songs</h2>
-        <SongList songs={popularSongs} />
+        <SongList albumSongs={popularSongs} />
 
         <AlbumCarousel
           title="Albums"

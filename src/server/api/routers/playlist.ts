@@ -255,16 +255,18 @@ export const playlistRouter = createTRPCRouter({
         });
       }
 
-      // Check if song already exists in playlist
-      const songExists = await ctx.db.playlistSong.findFirst({
-        where: {
-          playlistId: input.playlistId,
-          songId: input.songId,
-        },
-      });
+      if (playlist.isLiked) {
+        // Check if song already exists in playlist
+        const songExists = await ctx.db.playlistSong.findFirst({
+          where: {
+            playlistId: input.playlistId,
+            songId: input.songId,
+          },
+        });
 
-      if (songExists) {
-        return songExists; // Song already in playlist
+        if (songExists) {
+          return songExists; // Song already in playlist
+        }
       }
 
       // Get the song to use its image if playlist has no image

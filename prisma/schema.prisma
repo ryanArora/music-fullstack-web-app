@@ -26,8 +26,8 @@ model Song {
     imageUrl    String
     artistId    String
     artist      Artist         @relation(fields: [artistId], references: [id], onDelete: Cascade)
-    albumId     String?
-    album       Album?         @relation(fields: [albumId], references: [id], onDelete: SetNull)
+    albumId     String
+    album       Album          @relation(fields: [albumId], references: [id], onDelete: Cascade)
     playlists   PlaylistSong[]
     genre       String?
     releaseDate DateTime
