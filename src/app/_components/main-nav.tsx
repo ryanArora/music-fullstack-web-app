@@ -39,7 +39,7 @@ export function MainNav() {
           key={item.href}
           href={item.href}
           className={cn(
-            "hover:bg-secondary flex items-center gap-4 rounded-md px-3 py-2 text-sm transition-colors",
+            "flex items-center gap-4 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary",
             pathname === item.href
               ? "bg-secondary font-medium"
               : "text-muted-foreground",

@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import { type Metadata } from "next";
 import { AlbumCarousel } from "~/app/_components/album-carousel";
 import { ArtistCarousel } from "~/app/_components/artist-carousel";
 import { PlaylistCarousel } from "~/app/_components/playlist-carousel";

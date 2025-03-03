@@ -58,7 +58,7 @@ export default function PlaylistsPage() {
         <div className="rounded-lg border p-8 text-center">
           <h2 className="mb-2 text-lg font-medium">No playlists available</h2>
           <p className="mb-4 text-muted-foreground">
-            We don't have any playlists yet. Please check back later.
+            We don&apos;t have any playlists yet. Please check back later.
           </p>
         </div>
       ) : (

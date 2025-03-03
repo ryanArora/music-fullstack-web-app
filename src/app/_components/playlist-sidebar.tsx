@@ -39,7 +39,7 @@ export function PlaylistSidebar() {
 
   const createPlaylist = api.playlist.createPlaylist.useMutation({
     onSuccess: (newPlaylist) => {
-      utils.playlist.getUserPlaylists.invalidate();
+      void utils.playlist.getUserPlaylists.invalidate();
       setOpen(false);
       setTitle("");
       router.push(`/playlists/${newPlaylist.id}`);
@@ -57,7 +57,7 @@ export function PlaylistSidebar() {
   if (!session) {
     return (
       <div className="py-6">
-        <div className="text-muted-foreground px-3 text-center">
+        <div className="px-3 text-center text-muted-foreground">
           <p className="mb-2 text-sm">Sign in to create playlists</p>
           <ListMusic className="mx-auto h-8 w-8 opacity-50" />
         </div>
@@ -116,10 +116,10 @@ export function PlaylistSidebar() {
         <div className="space-y-1 p-2">
           {isLoading ? (
             <div className="flex animate-pulse flex-col space-y-2 py-2">
-              {[...Array(5)].map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="bg-muted/50 h-10 w-full rounded-md"
+                  className="h-10 w-full rounded-md bg-muted/50"
                 ></div>
               ))}
             </div>
@@ -128,16 +128,16 @@ export function PlaylistSidebar() {
               <Link
                 key={playlist.id}
                 href={`/playlists/${playlist.id}`}
-                className="hover:bg-accent flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
               >
                 {playlist.isLiked ? (
-                  <Heart className="text-primary h-4 w-4" />
+                  <Heart className="h-4 w-4 text-primary" />
                 ) : (
                   <ListMusic className="h-4 w-4" />
                 )}
                 <span className="truncate">{playlist.title}</span>
                 {!playlist.isPublic && (
-                  <span className="text-muted-foreground ml-auto text-xs">
+                  <span className="ml-auto text-xs text-muted-foreground">
                     Private
                   </span>
                 )}

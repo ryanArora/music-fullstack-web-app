@@ -9,7 +9,7 @@ import {
   CarouselPrevious,
 } from "~/app/_components/ui/carousel";
 import { AlbumCard } from "~/app/_components/album-card";
-import { RouterOutputs } from "~/trpc/react";
+import { type RouterOutputs } from "~/trpc/react";
 
 interface AlbumCarouselProps {
   title: string;

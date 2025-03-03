@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { RouterOutputs } from "~/trpc/react";
+import { type RouterOutputs } from "~/trpc/react";
 
 // Define repeat mode enum
 export type RepeatMode = "off" | "all" | "one";
@@ -108,7 +108,7 @@ export const usePlayerStore = create<PlayerState>()(
 
       // Handle the "ended" event
       const handleEnded = () => {
-        const { repeatMode, queueIndex, queue } = get();
+        const { repeatMode } = get();
 
         if (repeatMode === "one") {
           // For repeat one, reset the current song and directly play it again
@@ -175,7 +175,6 @@ export const usePlayerStore = create<PlayerState>()(
 
         // Play a specific song, optionally with a queue
         playSong: (song, songs = []) => {
-          const state = get();
           const newQueue = songs.length > 0 ? [...songs] : [song];
           const newIndex =
             songs.length > 0
@@ -465,7 +464,7 @@ export const usePlayerStore = create<PlayerState>()(
             const currentSongId = currentSong?.id;
 
             // Create a copy of the queue without the current song
-            let remainingSongs = [...queue];
+            const remainingSongs = [...queue];
             if (
               currentSongId &&
               queueIndex !== -1 &&

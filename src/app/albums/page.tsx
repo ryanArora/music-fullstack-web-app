@@ -57,7 +57,7 @@ export default function AlbumsPage() {
         <div className="rounded-lg border p-8 text-center">
           <h2 className="mb-2 text-lg font-medium">No albums available</h2>
           <p className="mb-4 text-muted-foreground">
-            We don't have any albums yet. Please check back later.
+            We don&apos;t have any albums yet. Please check back later.
           </p>
         </div>
       ) : (

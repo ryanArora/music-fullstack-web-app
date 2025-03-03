@@ -3,12 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Pause, Play } from "lucide-react";
-import { useState } from "react";
 
 import { cn } from "~/lib/utils";
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
-import { RouterOutputs } from "~/trpc/react";
+import { type RouterOutputs } from "~/trpc/react";
 
 interface AlbumCardProps {
   album: RouterOutputs["album"]["getById"];

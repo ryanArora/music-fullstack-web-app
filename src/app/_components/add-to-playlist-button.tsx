@@ -81,11 +81,11 @@ export function AddToPlaylistButton({ songId }: AddToPlaylistButtonProps) {
         <ScrollArea className="max-h-[300px] pr-4">
           <div className="space-y-2 py-2">
             {isLoading ? (
-              <p className="text-muted-foreground text-center text-sm">
+              <p className="text-center text-sm text-muted-foreground">
                 Loading playlists...
               </p>
             ) : playlists?.length === 0 ? (
-              <p className="text-muted-foreground text-center text-sm">
+              <p className="text-center text-sm text-muted-foreground">
                 You don&apos;t have any playlists yet
               </p>
             ) : (

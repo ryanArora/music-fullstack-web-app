@@ -1,7 +1,7 @@
 "use client";
 
 import { Pause, Play } from "lucide-react";
-import { Artist, type Song } from "@prisma/client";
+import { type Artist, type Song } from "@prisma/client";
 import Link from "next/link";
 
 import { Button } from "~/app/_components/ui/button";
@@ -60,7 +60,7 @@ export function SongList({ songs }: SongListProps) {
 
   return (
     <div className="rounded-md border">
-      <div className="bg-secondary/50 grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b px-4 py-3 font-medium">
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b bg-secondary/50 px-4 py-3 font-medium">
         <span className="text-muted-foreground">#</span>
         <span>Title</span>
         <span className="text-muted-foreground">Duration</span>
@@ -83,7 +83,7 @@ export function SongList({ songs }: SongListProps) {
                   className={cn(
                     "text-muted-foreground",
                     isCurrentSong ? "hidden" : "group-hover:hidden",
-                    isCurrentSong && "text-primary font-medium",
+                    isCurrentSong && "font-medium text-primary",
                   )}
                 >
                   {index + 1}
@@ -114,14 +114,14 @@ export function SongList({ songs }: SongListProps) {
                 </span>
                 <Link
                   href={`/artists/${song.artist.id}`}
-                  className="text-muted-foreground hover:text-primary text-sm hover:underline"
+                  className="text-sm text-muted-foreground hover:text-primary hover:underline"
                 >
                   {song.artist.name}
                 </Link>
               </div>
               <span
                 className={cn(
-                  "text-muted-foreground text-sm",
+                  "text-sm text-muted-foreground",
                   isCurrentSong && "text-primary",
                 )}
               >

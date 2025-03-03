@@ -3,7 +3,7 @@
 import { Pause, Play } from "lucide-react";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { Button } from "~/app/_components/ui/button";
-import { RouterOutputs } from "~/trpc/react";
+import { type RouterOutputs } from "~/trpc/react";
 
 interface PlayButtonProps {
   album: RouterOutputs["album"]["getById"];

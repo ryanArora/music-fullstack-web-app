@@ -23,7 +23,7 @@ export function ArtistCard({ artist, className }: ArtistCardProps) {
         </div>
         <div className="text-center">
           <h3 className="font-medium hover:underline">{artist.name}</h3>
-          <p className="text-muted-foreground text-sm">Artist</p>
+          <p className="text-sm text-muted-foreground">Artist</p>
         </div>
       </div>
     </Link>

@@ -9,7 +9,7 @@ import {
   CarouselPrevious,
 } from "~/app/_components/ui/carousel";
 import { PlaylistCard } from "~/app/_components/playlist-card";
-import { RouterOutputs } from "~/trpc/react";
+import { type RouterOutputs } from "~/trpc/react";
 
 interface PlaylistCarouselProps {
   title: string;

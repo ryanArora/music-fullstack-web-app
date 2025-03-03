@@ -32,9 +32,6 @@ import { QueueDialog } from "~/app/_components/queue-dialog";
 import { useSession } from "next-auth/react";
 import { api } from "~/trpc/react";
 
-// Define repeat mode enum
-type RepeatMode = "off" | "all" | "one";
-
 export function PlayerFooter() {
   const {
     currentSong,
@@ -76,10 +73,10 @@ export function PlayerFooter() {
   const { mutate: toggleLike, isPending: isLiking } =
     api.playlist.toggleLikedSong.useMutation({
       onSuccess: () => {
-        utils.playlist.isLikedSong.invalidate({
+        void utils.playlist.isLikedSong.invalidate({
           songId: currentSong?.id ?? "",
         });
-        utils.playlist.getUserPlaylists.invalidate();
+        void utils.playlist.getUserPlaylists.invalidate();
       },
     });
 
@@ -124,7 +121,7 @@ export function PlayerFooter() {
 
   return (
     <>
-      <div className="bg-background/80 fixed bottom-0 left-0 right-0 border-t backdrop-blur-md">
+      <div className="fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-md">
         <div className="container flex h-20 items-center px-4">
           {/* Song info */}
           <div className="flex w-1/4 items-center gap-4">
@@ -145,7 +142,7 @@ export function PlayerFooter() {
               </Link>
               <Link
                 href={`/artists/${currentSong.artist.id}`}
-                className="text-muted-foreground line-clamp-1 text-sm hover:underline"
+                className="line-clamp-1 text-sm text-muted-foreground hover:underline"
               >
                 {currentSong.artist.name}
               </Link>
@@ -162,7 +159,7 @@ export function PlayerFooter() {
                   >
                     <Heart
                       className={cn("h-5 w-5", {
-                        "text-primary fill-primary": likedStatus?.liked,
+                        "fill-primary text-primary": likedStatus?.liked,
                         "animate-pulse": isLiking,
                       })}
                     />
@@ -191,7 +188,7 @@ export function PlayerFooter() {
                       onClick={toggleShuffle}
                       className={cn({
                         "text-muted-foreground": !shuffleEnabled,
-                        "text-primary bg-primary/10": shuffleEnabled,
+                        "bg-primary/10 text-primary": shuffleEnabled,
                       })}
                     >
                       <Shuffle className="h-5 w-5" />
@@ -217,12 +214,12 @@ export function PlayerFooter() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="hover:bg-primary/10 h-10 w-10"
+                className="h-10 w-10 hover:bg-primary/10"
                 onClick={() => void togglePlayPause()}
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <span className="border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent"></span>
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
                 ) : isPlaying ? (
                   <Pause className="h-5 w-5" />
                 ) : (
@@ -274,7 +271,7 @@ export function PlayerFooter() {
             </div>
 
             <div className="mt-1 flex w-full max-w-md items-center gap-2">
-              <span className="text-muted-foreground w-10 text-right text-xs">
+              <span className="w-10 text-right text-xs text-muted-foreground">
                 {formatTime(progress)}
               </span>
               <Slider
@@ -293,7 +290,7 @@ export function PlayerFooter() {
                 })}
                 aria-label="Seek time"
               />
-              <span className="text-muted-foreground w-10 text-xs">
+              <span className="w-10 text-xs text-muted-foreground">
                 {formatTime(duration || 0)}
               </span>
             </div>

@@ -6,11 +6,6 @@ import { Loader2 } from "lucide-react";
 
 import { ArtistCard } from "~/app/_components/artist-card";
 import { api } from "~/trpc/react";
-import type { Artist } from "@prisma/client";
-import type { RouterOutputs } from "~/trpc/react";
-
-// Define the type for the API response
-type ArtistPaginatedResponse = RouterOutputs["artist"]["getAll"];
 
 export default function ArtistsPage() {
   const { ref, inView } = useInView();
@@ -62,7 +57,7 @@ export default function ArtistsPage() {
         <div className="rounded-lg border p-8 text-center">
           <h2 className="mb-2 text-lg font-medium">No artists available</h2>
           <p className="mb-4 text-muted-foreground">
-            We don't have any artists yet. Please check back later.
+            We don&apos;t have any artists yet. Please check back later.
           </p>
         </div>
       ) : (

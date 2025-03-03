@@ -1,11 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-
 import { cn } from "~/lib/utils";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
-import { RouterOutputs } from "~/trpc/react";
+import { type RouterOutputs } from "~/trpc/react";
 import { Button } from "~/app/_components/ui/button";
 import { Pause, Play } from "lucide-react";
 import Link from "next/link";
