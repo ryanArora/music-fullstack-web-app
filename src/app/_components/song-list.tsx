@@ -7,9 +7,10 @@ import Link from "next/link";
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { cn } from "~/lib/utils";
+import { RouterOutputs } from "~/trpc/react";
 
 interface SongListProps {
-  songs: (Song & { artist: Pick<Artist, "name" | "id"> })[];
+  songs: RouterOutputs["song"]["getById"][];
 }
 
 export function SongList({ songs }: SongListProps) {
@@ -22,7 +23,7 @@ export function SongList({ songs }: SongListProps) {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const handlePlay = (song: Song & { artist: Pick<Artist, "name" | "id"> }) => {
+  const handlePlay = (song: RouterOutputs["song"]["getById"]) => {
     // If this song is current playing, toggle playback
     if (currentSong?.id === song.id) {
       void togglePlayPause();

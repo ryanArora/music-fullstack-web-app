@@ -1,10 +1,16 @@
 import puppeteer, { Browser } from "puppeteer";
 import inquirer from "inquirer";
 import { PrismaClient } from "@prisma/client";
+import { execSync } from "child_process";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
+import { minio } from "~/server/minio";
 
 const prisma = new PrismaClient();
 const YOUTUBE_MUSIC_BASE_URL = "https://music.youtube.com";
 const YOUTUBE_BASE_URL = "https://www.youtube.com";
+const MINIO_BUCKET = "music";
 
 export async function getArtistUrl(browser: Browser, artistName: string) {
   const page = await browser.newPage();
@@ -269,6 +275,18 @@ async function saveArtistToDatabase(artistData: {
 }) {
   console.log("Saving artist to database...");
 
+  // Ensure the MinIO bucket exists
+  try {
+    const bucketExists = await minio.bucketExists(MINIO_BUCKET);
+    if (!bucketExists) {
+      await minio.makeBucket(MINIO_BUCKET, "us-east-1");
+      console.log(`Created MinIO bucket: ${MINIO_BUCKET}`);
+    }
+  } catch (error) {
+    console.error("Error checking/creating MinIO bucket:", error);
+    throw error;
+  }
+
   // Create the artist
   const artist = await prisma.artist.create({
     data: {
@@ -295,20 +313,61 @@ async function saveArtistToDatabase(artistData: {
 
     // Create songs for this album
     for (const songData of albumData.songs) {
-      const song = await prisma.song.create({
-        data: {
-          title: songData.title,
-          url: songData.url,
-          duration: 180, // Default duration in seconds
-          imageUrl: albumData.image,
-          artistId: artist.id,
-          albumId: album.id,
-          genre: "Unknown", // Default genre
-          releaseDate: new Date(),
-        },
-      });
+      try {
+        // Create song record first to get the ID
+        const song = await prisma.song.create({
+          data: {
+            title: songData.title,
+            duration: 180, // Default duration in seconds
+            imageUrl: albumData.image,
+            artistId: artist.id,
+            albumId: album.id,
+            genre: "Unknown", // Default genre
+            releaseDate: new Date(),
+          },
+        });
 
-      console.log(`Created song: ${song.title} (${song.id})`);
+        console.log(`Created song: ${song.title} (${song.id})`);
+
+        // Generate a temporary file path using the song ID
+        const tempDir = os.tmpdir();
+        const tempFilePath = path.join(tempDir, `${song.id}.webm`);
+
+        try {
+          console.log(
+            `Downloading audio for: ${song.title} from ${songData.url}`,
+          );
+
+          // Download audio using yt-dlp (audio only, best quality webm)
+          execSync(
+            `yt-dlp -f "bestaudio[ext=webm]" -o "${tempFilePath}" ${songData.url}`,
+            { stdio: "inherit" },
+          );
+
+          console.log(`Download complete: ${tempFilePath}`);
+
+          // Upload to MinIO
+          const objectKey = `${song.id}.webm`;
+          await minio.fPutObject(MINIO_BUCKET, objectKey, tempFilePath, {
+            "Content-Type": "audio/webm",
+          });
+
+          console.log(`Uploaded to MinIO: ${objectKey}`);
+        } catch (downloadError) {
+          console.error(
+            `Error downloading/uploading song: ${song.title}`,
+            downloadError,
+          );
+        } finally {
+          // Clean up the temporary file
+          if (fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+            console.log(`Deleted temporary file: ${tempFilePath}`);
+          }
+        }
+      } catch (songError) {
+        console.error(`Error processing song: ${songData.title}`, songError);
+      }
     }
   }
 

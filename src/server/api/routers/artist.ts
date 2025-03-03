@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { albumInclude } from "./album";
+import { getPresignedSongUrl } from "~/server/minio";
 
 export const artistRouter = createTRPCRouter({
   getAll: publicProcedure
@@ -43,8 +44,8 @@ export const artistRouter = createTRPCRouter({
 
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(({ ctx, input }) => {
-      return ctx.db.artist.findUniqueOrThrow({
+    .query(async ({ ctx, input }) => {
+      const artist = await ctx.db.artist.findUniqueOrThrow({
         where: {
           id: input.id,
         },
@@ -68,12 +69,40 @@ export const artistRouter = createTRPCRouter({
           },
         },
       });
+
+      const songsWithUrls = await Promise.all(
+        artist.songs.map(async (song) => ({
+          ...song,
+          url: await getPresignedSongUrl(song.id),
+        })),
+      );
+
+      // Add presigned URLs to songs in albums
+      const albumsWithSongUrls = await Promise.all(
+        artist.albums.map(async (album) => {
+          return {
+            ...album,
+            songs: await Promise.all(
+              album.songs.map(async (song) => ({
+                ...song,
+                url: await getPresignedSongUrl(song.id),
+              })),
+            ),
+          };
+        }),
+      );
+
+      return {
+        ...artist,
+        songs: songsWithUrls,
+        albums: albumsWithSongUrls,
+      };
     }),
 
   getPopularSongs: publicProcedure
     .input(z.object({ artistId: z.string() }))
-    .query(({ ctx, input }) => {
-      return ctx.db.song.findMany({
+    .query(async ({ ctx, input }) => {
+      const songs = await ctx.db.song.findMany({
         where: {
           artistId: input.artistId,
         },
@@ -86,6 +115,13 @@ export const artistRouter = createTRPCRouter({
         },
         take: 5, // Get top 5 songs for now
       });
+
+      return await Promise.all(
+        songs.map(async (song) => ({
+          ...song,
+          url: await getPresignedSongUrl(song.id),
+        })),
+      );
     }),
 
   getAlbumsByType: publicProcedure
@@ -95,8 +131,8 @@ export const artistRouter = createTRPCRouter({
         type: z.enum(["ALBUM", "EP", "SINGLE"]),
       }),
     )
-    .query(({ ctx, input }) => {
-      return ctx.db.album.findMany({
+    .query(async ({ ctx, input }) => {
+      const albums = await ctx.db.album.findMany({
         where: {
           artistId: input.artistId,
           type: input.type,
@@ -106,5 +142,20 @@ export const artistRouter = createTRPCRouter({
         },
         include: albumInclude,
       });
+
+      // Add presigned URLs to songs in each album
+      return Promise.all(
+        albums.map(async (album) => {
+          return {
+            ...album,
+            songs: await Promise.all(
+              album.songs.map(async (song) => ({
+                ...song,
+                url: await getPresignedSongUrl(song.id),
+              })),
+            ),
+          };
+        }),
+      );
     }),
 });

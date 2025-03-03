@@ -69,16 +69,7 @@ export default async function ArtistDetailPage({
 
         <AlbumCarousel
           title="EPs"
-          albums={eps.map((album) => ({
-            ...album,
-            artist: {
-              id: artist.id,
-              name: artist.name,
-              imageUrl: artist.imageUrl,
-              createdAt: artist.createdAt,
-              updatedAt: artist.updatedAt,
-            },
-          }))}
+          albums={eps}
           emptyMessage="No EPs available"
         />
 

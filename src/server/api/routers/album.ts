@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { type Prisma } from "@prisma/client";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { getPresignedSongUrl } from "~/server/minio";
 
 export const albumInclude = {
   artist: true,
@@ -14,6 +15,38 @@ export const albumInclude = {
     },
   },
 } satisfies Prisma.AlbumInclude;
+
+// Define the album type with included relations
+type AlbumWithRelations = Prisma.AlbumGetPayload<{
+  include: typeof albumInclude;
+}>;
+
+// Define type for song with presigned URL
+type SongWithPresignedUrl = AlbumWithRelations["songs"][number] & {
+  url: string;
+};
+
+// Define return type with presigned URLs
+type AlbumWithPresignedUrls = Omit<AlbumWithRelations, "songs"> & {
+  songs: SongWithPresignedUrl[];
+};
+
+// Helper function to add presigned URLs to songs in an album
+const addPresignedUrlsToAlbum = async (
+  album: AlbumWithRelations,
+): Promise<AlbumWithPresignedUrls> => {
+  const songsWithUrls = await Promise.all(
+    album.songs.map(async (song) => ({
+      ...song,
+      url: await getPresignedSongUrl(song.id),
+    })),
+  );
+
+  return {
+    ...album,
+    songs: songsWithUrls,
+  };
+};
 
 export const albumRouter = createTRPCRouter({
   getAll: publicProcedure
@@ -49,8 +82,13 @@ export const albumRouter = createTRPCRouter({
         nextCursor = nextItem?.id;
       }
 
+      // Add presigned URLs to songs in each album
+      const albumsWithUrls = await Promise.all(
+        albums.map(addPresignedUrlsToAlbum),
+      );
+
       return {
-        items: albums,
+        items: albumsWithUrls,
         nextCursor,
       };
     }),
@@ -65,13 +103,13 @@ export const albumRouter = createTRPCRouter({
         include: albumInclude,
       });
 
-      return album;
+      return addPresignedUrlsToAlbum(album);
     }),
 
   getByArtistId: publicProcedure
     .input(z.object({ artistId: z.string() }))
-    .query(({ ctx, input }) => {
-      return ctx.db.album.findMany({
+    .query(async ({ ctx, input }) => {
+      const albums = await ctx.db.album.findMany({
         where: {
           artistId: input.artistId,
         },
@@ -80,5 +118,7 @@ export const albumRouter = createTRPCRouter({
           releaseDate: "desc",
         },
       });
+
+      return Promise.all(albums.map(addPresignedUrlsToAlbum));
     }),
 });

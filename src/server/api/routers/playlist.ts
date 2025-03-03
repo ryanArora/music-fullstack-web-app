@@ -7,6 +7,7 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
+import { getPresignedSongUrl } from "~/server/minio";
 
 const include = {
   songs: {
@@ -30,6 +31,33 @@ const include = {
     },
   },
 } satisfies Prisma.PlaylistInclude;
+
+// Helper function to add presigned URLs to playlist songs
+const addPresignedUrlsToPlaylist = async (
+  playlist: Prisma.PlaylistGetPayload<{ include: typeof include }>,
+) => {
+  const songsWithUrls = await Promise.all(
+    playlist.songs.map(async (playlistSong) => ({
+      ...playlistSong,
+      song: {
+        ...playlistSong.song,
+        url: await getPresignedSongUrl(playlistSong.song.id),
+      },
+    })),
+  );
+
+  return {
+    ...playlist,
+    songs: songsWithUrls,
+  };
+};
+
+// Helper to add presigned URLs to multiple playlists
+const addPresignedUrlsToPlaylists = async (
+  playlists: Prisma.PlaylistGetPayload<{ include: typeof include }>[],
+) => {
+  return Promise.all(playlists.map(addPresignedUrlsToPlaylist));
+};
 
 export const playlistRouter = createTRPCRouter({
   // Public procedures
@@ -69,8 +97,11 @@ export const playlistRouter = createTRPCRouter({
         nextCursor = nextItem?.id;
       }
 
+      // Add presigned URLs to songs
+      const playlistsWithUrls = await addPresignedUrlsToPlaylists(playlists);
+
       return {
-        items: playlists,
+        items: playlistsWithUrls,
         nextCursor,
       };
     }),
@@ -100,7 +131,8 @@ export const playlistRouter = createTRPCRouter({
         });
       }
 
-      return playlist;
+      // Add presigned URLs to songs
+      return addPresignedUrlsToPlaylist(playlist);
     }),
 
   // Protected procedures (requires authentication)

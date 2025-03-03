@@ -23,7 +23,6 @@ model Song {
     id          String         @id @default(cuid())
     title       String
     duration    Int // in seconds
-    url         String
     imageUrl    String
     artistId    String
     artist      Artist         @relation(fields: [artistId], references: [id], onDelete: Cascade)

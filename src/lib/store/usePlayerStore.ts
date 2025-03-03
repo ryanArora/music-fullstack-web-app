@@ -5,7 +5,9 @@ import { type RouterOutputs } from "~/trpc/react";
 // Define repeat mode enum
 export type RepeatMode = "off" | "all" | "one";
 
-export type SongWithDetails = RouterOutputs["song"]["getById"];
+export type SongWithDetails = RouterOutputs["song"]["getById"] & {
+  url: string;
+};
 
 interface PlayerState {
   // Current state
