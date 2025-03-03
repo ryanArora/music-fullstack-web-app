@@ -1,13 +1,13 @@
 "use client";
 
 import { Pause, Play } from "lucide-react";
-import { type Artist, type Song } from "@prisma/client";
 import Link from "next/link";
 
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { cn } from "~/lib/utils";
 import { RouterOutputs } from "~/trpc/react";
+import { SongDropdown } from "./song-dropdown";
 
 interface SongListProps {
   songs: RouterOutputs["song"]["getById"][];
@@ -135,14 +135,17 @@ export function SongList({ songs }: SongListProps) {
                   {song.artist.name}
                 </Link>
               </div>
-              <span
-                className={cn(
-                  "text-sm text-muted-foreground",
-                  isCurrentSong && "text-primary",
-                )}
-              >
-                {formatDuration(song.duration)}
-              </span>
+              <div className="relative flex items-center justify-end">
+                <span
+                  className={cn(
+                    "absolute right-0 text-sm text-muted-foreground group-hover:invisible",
+                    isCurrentSong && "text-primary",
+                  )}
+                >
+                  {formatDuration(song.duration)}
+                </span>
+                <SongDropdown className="invisible absolute right-0 text-muted-foreground group-hover:visible" />
+              </div>
             </div>
           );
         })}

@@ -31,6 +31,7 @@ import { cn } from "~/lib/utils";
 import { QueueDialog } from "~/app/_components/queue-dialog";
 import { useSession } from "next-auth/react";
 import { api } from "~/trpc/react";
+import { SongDropdown } from "./song-dropdown";
 
 export function PlayerFooter() {
   const {
@@ -122,7 +123,35 @@ export function PlayerFooter() {
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-md">
-        <div className="container flex h-20 items-center px-4">
+        <div className="container flex h-20 items-center gap-4">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-2"
+                  onClick={handleLikeToggle}
+                  disabled={!session || isLiking || isLikedLoading}
+                >
+                  <Heart
+                    className={cn("h-5 w-5", {
+                      "fill-primary text-primary": likedStatus?.liked,
+                      "animate-pulse": isLiking,
+                    })}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {!session
+                  ? "Sign in to like songs"
+                  : likedStatus?.liked
+                    ? "Remove from Liked Songs"
+                    : "Add to Liked Songs"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           {/* Song info */}
           <div className="flex w-1/4 items-center gap-4">
             <div className="relative h-12 w-12 overflow-hidden rounded-md">
@@ -153,33 +182,9 @@ export function PlayerFooter() {
                 {currentSong.artist.name}
               </Link>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="ml-2"
-                    onClick={handleLikeToggle}
-                    disabled={!session || isLiking || isLikedLoading}
-                  >
-                    <Heart
-                      className={cn("h-5 w-5", {
-                        "fill-primary text-primary": likedStatus?.liked,
-                        "animate-pulse": isLiking,
-                      })}
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {!session
-                    ? "Sign in to like songs"
-                    : likedStatus?.liked
-                      ? "Remove from Liked Songs"
-                      : "Add to Liked Songs"}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="flex items-center">
+              <SongDropdown />
+            </div>
           </div>
 
           {/* Playback controls */}
