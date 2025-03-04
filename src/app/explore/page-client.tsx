@@ -19,11 +19,17 @@ export default function ExplorePage() {
     isError: isErrorAlbums,
   } = api.album.getFeatured.useQuery();
 
-  const { data: artists, isLoading: isLoadingArtists } =
-    api.artist.getFeatured.useQuery();
+  const {
+    data: artists,
+    isLoading: isLoadingArtists,
+    isError: isErrorArtists,
+  } = api.artist.getFeatured.useQuery();
 
-  const { data: playlists, isLoading: isLoadingPlaylists } =
-    api.playlist.getFeatured.useQuery();
+  const {
+    data: playlists,
+    isLoading: isLoadingPlaylists,
+    isError: isErrorPlaylists,
+  } = api.playlist.getFeatured.useQuery();
 
   // Extract songs from the response
   const songs = songsData?.items || [];
@@ -49,17 +55,31 @@ export default function ExplorePage() {
       <section className="mb-10">
         <h2 className="mb-4 text-2xl font-bold">Featured Songs</h2>
         <div className="space-y-2">
-          {isLoadingSongs ? (
-            <p>Loading songs...</p>
-          ) : (
-            <SongList albumSongs={songs} isLoading={isLoadingSongs} />
-          )}
+          <SongList albumSongs={songs} isLoading={isLoadingSongs} />
         </div>
       </section>
 
-      <ArtistCarousel title="Top Artists" artists={artists || []} />
+      <ArtistCarousel
+        title="Top Artists"
+        artists={
+          isLoadingArtists
+            ? { items: undefined, loading: true, error: false }
+            : isErrorArtists
+              ? { items: undefined, loading: false, error: true }
+              : { items: artists || [], loading: false, error: false }
+        }
+      />
 
-      <PlaylistCarousel title="Playlists For You" playlists={playlists || []} />
+      <PlaylistCarousel
+        title="Playlists For You"
+        playlists={
+          isLoadingPlaylists
+            ? { items: undefined, loading: true, error: false }
+            : isErrorPlaylists
+              ? { items: undefined, loading: false, error: true }
+              : { items: playlists || [], loading: false, error: false }
+        }
+      />
     </main>
   );
 }

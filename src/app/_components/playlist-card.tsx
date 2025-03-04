@@ -9,16 +9,51 @@ import { Pause, Play } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { PlaylistImage } from "./ui/playlist-image";
+import { Skeleton } from "./ui/skeleton";
 
-interface PlaylistCardProps {
-  playlist: RouterOutputs["playlist"]["getById"];
+type PlaylistCardProps = {
   className?: string;
-}
+} & (
+  | {
+      loading: true;
+      error: false;
+      playlist: undefined;
+    }
+  | {
+      loading: false;
+      error: false;
+      playlist: RouterOutputs["playlist"]["getById"];
+    }
+  | {
+      loading: false;
+      error: true;
+      playlist: undefined;
+    }
+);
 
-export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
+export function PlaylistCard({
+  loading,
+  error,
+  playlist,
+  className,
+}: PlaylistCardProps) {
   const { playPlaylist, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
   const { theme } = useTheme();
+
+  if (error) return null;
+
+  if (loading) {
+    return (
+      <div className={cn("block space-y-3", className)}>
+        <Skeleton className="aspect-square w-full rounded-md" />
+        <div className="space-y-1">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+      </div>
+    );
+  }
 
   const isCurrentPlaylist = playlist.songs.some(
     (playlistSong) => playlistSong.song.id === currentSong?.id,

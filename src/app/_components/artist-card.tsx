@@ -3,13 +3,48 @@ import Link from "next/link";
 import { type Artist } from "@prisma/client";
 
 import { cn } from "~/lib/utils";
+import { Skeleton } from "./ui/skeleton";
 
-interface ArtistCardProps {
-  artist: Artist;
+type ArtistCardProps = {
   className?: string;
-}
+} & (
+  | {
+      loading: true;
+      error: false;
+      artist: undefined;
+    }
+  | {
+      loading: false;
+      error: false;
+      artist: Artist;
+    }
+  | {
+      loading: false;
+      error: true;
+      artist: undefined;
+    }
+);
 
-export function ArtistCard({ artist, className }: ArtistCardProps) {
+export function ArtistCard({
+  loading,
+  error,
+  artist,
+  className,
+}: ArtistCardProps) {
+  if (error) return null;
+
+  if (loading) {
+    return (
+      <div className={cn("group space-y-3", className)}>
+        <Skeleton className="aspect-square w-full rounded-full" />
+        <div className="text-center">
+          <Skeleton className="mx-auto h-5 w-24" />
+          <Skeleton className="mx-auto mt-1 h-4 w-16" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Link href={`/artists/${artist.id}`} className="block">
       <div className={cn("group space-y-3", className)}>

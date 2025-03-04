@@ -16,12 +16,14 @@ type SongListProps =
       albumSongs?: never;
       playlistSongs: RouterOutputs["playlist"]["getById"]["songs"];
       isLoading: boolean;
+      lengthHint?: number;
     }
   | {
       playlistId?: never;
       albumSongs: RouterOutputs["song"]["getById"][];
       playlistSongs?: never;
       isLoading: boolean;
+      lengthHint?: number;
     };
 
 export function SongList({
@@ -29,13 +31,13 @@ export function SongList({
   playlistSongs,
   albumSongs,
   isLoading = false,
+  lengthHint = 10,
 }: SongListProps) {
   const { playSong, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
 
-  const songs = isLoading
-    ? Array(5).fill(null)
-    : playlistId !== undefined
+  const songs =
+    playlistId !== undefined
       ? playlistSongs.map((playlistSong) => ({
           key: playlistSong.id,
           ...playlistSong.song,
@@ -63,7 +65,7 @@ export function SongList({
       </div>
       <div className="divide-y">
         {isLoading
-          ? Array.from({ length: 5 }).map((_, index) => (
+          ? Array.from({ length: lengthHint }).map((_, index) => (
               <div
                 key={`skeleton-${index}`}
                 className="grid grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3"
