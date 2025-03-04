@@ -117,19 +117,14 @@ export const playlistRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const playlist = await ctx.db.playlist.findUniqueOrThrow({
+      const playlist = await ctx.db.playlist.findUnique({
         where: {
           id: input.id,
         },
         include: playlistInclude,
       });
 
-      if (!playlist) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Playlist not found",
-        });
-      }
+      if (!playlist) return null;
 
       // Only return if public or owned by the current user
       if (!playlist.isPublic && playlist.userId !== ctx.session?.user?.id) {

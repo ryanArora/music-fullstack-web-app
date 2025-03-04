@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, ListMusic, Plus } from "lucide-react";
@@ -25,6 +25,7 @@ import { TooltipProvider } from "./ui/tooltip";
 import { Tooltip } from "./ui/tooltip";
 import { TooltipContent } from "./ui/tooltip";
 import { TooltipTrigger } from "./ui/tooltip";
+import { PlaylistDropdown } from "./playlist-dropdown";
 
 export function PlaylistSidebar() {
   const session = useSessionContext();
@@ -142,19 +143,19 @@ export function PlaylistSidebar() {
               <Link
                 key={playlist.id}
                 href={`/playlists/${playlist.id}`}
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
+                className="group flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent"
               >
                 {playlist.isLiked ? (
                   <Heart className="h-4 w-4 text-primary" />
                 ) : (
                   <ListMusic className="h-4 w-4" />
                 )}
-                <span className="truncate">{playlist.title}</span>
-                {!playlist.isPublic && (
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    Private
-                  </span>
-                )}
+                <span className="w-36 truncate">{playlist.title}</span>
+
+                <PlaylistDropdown
+                  className="invisible absolute right-2 text-muted-foreground group-hover:visible"
+                  playlist={playlist}
+                />
               </Link>
             ))
           )}

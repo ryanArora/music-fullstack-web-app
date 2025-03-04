@@ -17,7 +17,7 @@ type PlaylistCarouselProps = {
 } & {
   playlists:
     | {
-        items: RouterOutputs["playlist"]["getById"][];
+        items: NonNullable<RouterOutputs["playlist"]["getById"]>[];
         loading: false;
         error: false;
       }

@@ -33,7 +33,9 @@ interface PlayerState {
   // Methods
   playSong: (song: SongWithDetails, songs?: SongWithDetails[]) => void;
   playAlbum: (album: RouterOutputs["album"]["getById"]) => void;
-  playPlaylist: (playlist: RouterOutputs["playlist"]["getById"]) => void;
+  playPlaylist: (
+    playlist: NonNullable<RouterOutputs["playlist"]["getById"]>,
+  ) => void;
   togglePlayPause: () => Promise<void>;
   setVolume: (volume: number) => void;
   toggleMute: () => void;

@@ -25,7 +25,6 @@ import { RouterOutputs, api } from "~/trpc/react";
 import Link from "next/link";
 import { useToast } from "~/app/_components/ui/use-toast";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
-import { useSession } from "next-auth/react";
 import { useSessionContext } from "./session-provider";
 
 export function SongDropdown({

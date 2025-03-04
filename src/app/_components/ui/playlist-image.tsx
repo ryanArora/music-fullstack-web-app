@@ -9,7 +9,7 @@ import { RouterOutputs } from "~/trpc/react";
 export function PlaylistImage({
   playlist,
 }: {
-  playlist: RouterOutputs["playlist"]["getById"];
+  playlist: NonNullable<RouterOutputs["playlist"]["getById"]>;
 }) {
   const { theme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);

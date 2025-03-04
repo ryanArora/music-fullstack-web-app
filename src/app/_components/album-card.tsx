@@ -108,7 +108,7 @@ export function AlbumCard({
         <Link
           href={`/albums/${album.id}`}
           className={cn(
-            "block font-medium leading-tight hover:underline",
+            "block truncate font-medium leading-tight hover:underline",
             isCurrentAlbum && "text-primary",
           )}
         >

@@ -57,7 +57,9 @@ export function ArtistCard({
           />
         </div>
         <div className="text-center">
-          <h3 className="font-medium hover:underline">{artist.name}</h3>
+          <h3 className="truncate font-medium hover:underline">
+            {artist.name}
+          </h3>
           <p className="text-sm text-muted-foreground">Artist</p>
         </div>
       </div>

@@ -1,13 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { cn } from "~/lib/utils";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { type RouterOutputs } from "~/trpc/react";
 import { Button } from "~/app/_components/ui/button";
 import { Pause, Play } from "lucide-react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import { PlaylistImage } from "./ui/playlist-image";
 import { Skeleton } from "./ui/skeleton";
 
@@ -22,7 +20,7 @@ type PlaylistCardProps = {
   | {
       loading: false;
       error: false;
-      playlist: RouterOutputs["playlist"]["getById"];
+      playlist: NonNullable<RouterOutputs["playlist"]["getById"]>;
     }
   | {
       loading: false;
@@ -39,7 +37,6 @@ export function PlaylistCard({
 }: PlaylistCardProps) {
   const { playPlaylist, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
-  const { theme } = useTheme();
 
   if (error) return null;
 
@@ -105,7 +102,7 @@ export function PlaylistCard({
         <Link
           href={`/playlists/${playlist.id}`}
           className={cn(
-            "block font-medium leading-tight hover:underline",
+            "block truncate font-medium leading-tight hover:underline",
             isCurrentPlaylist && "text-primary",
           )}
         >

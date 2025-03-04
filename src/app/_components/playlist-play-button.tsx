@@ -6,7 +6,7 @@ import { Button } from "~/app/_components/ui/button";
 import { type RouterOutputs } from "~/trpc/react";
 
 interface PlaylistPlayButtonProps {
-  playlist: RouterOutputs["playlist"]["getById"];
+  playlist: NonNullable<RouterOutputs["playlist"]["getById"]>;
 }
 
 export function PlaylistPlayButton({ playlist }: PlaylistPlayButtonProps) {

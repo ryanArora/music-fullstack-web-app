@@ -14,7 +14,7 @@ type SongListProps =
   | {
       playlistId: string;
       albumSongs?: never;
-      playlistSongs: RouterOutputs["playlist"]["getById"]["songs"];
+      playlistSongs: NonNullable<RouterOutputs["playlist"]["getById"]>["songs"];
       isLoading: boolean;
       lengthHint?: number;
     }
