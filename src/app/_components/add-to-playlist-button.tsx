@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/app/_components/ui/dialog";
-import { useSession } from "next-auth/react";
+import { useSessionContext } from "~/app/_components/session-provider";
 import { api } from "~/trpc/react";
 import { useToast } from "~/app/_components/ui/use-toast";
 import { ScrollArea } from "~/app/_components/ui/scroll-area";
@@ -23,7 +23,7 @@ interface AddToPlaylistButtonProps {
 
 export function AddToPlaylistButton({ songId }: AddToPlaylistButtonProps) {
   const [open, setOpen] = useState(false);
-  const { data: session } = useSession();
+  const session = useSessionContext();
   const { toast } = useToast();
   const utils = api.useUtils();
 

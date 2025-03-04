@@ -32,6 +32,7 @@ import { QueueDialog } from "~/app/_components/queue-dialog";
 import { useSession } from "next-auth/react";
 import { api } from "~/trpc/react";
 import { SongDropdown } from "./song-dropdown";
+import { useSessionContext } from "./session-provider";
 
 export function PlayerFooter() {
   const {
@@ -54,7 +55,7 @@ export function PlayerFooter() {
     initAudio,
   } = usePlayerStore();
 
-  const { data: session } = useSession();
+  const session = useSessionContext();
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [queueDialogOpen, setQueueDialogOpen] = useState(false);

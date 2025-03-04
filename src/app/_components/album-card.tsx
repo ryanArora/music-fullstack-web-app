@@ -8,15 +8,50 @@ import { cn } from "~/lib/utils";
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { type RouterOutputs } from "~/trpc/react";
+import { Skeleton } from "./ui/skeleton";
 
-interface AlbumCardProps {
-  album: RouterOutputs["album"]["getById"];
+type AlbumCardProps = {
   className?: string;
-}
+} & (
+  | {
+      loading: true;
+      error: false;
+      album: undefined;
+    }
+  | {
+      loading: false;
+      error: false;
+      album: RouterOutputs["album"]["getById"];
+    }
+  | {
+      loading: false;
+      error: true;
+      album: undefined;
+    }
+);
 
-export function AlbumCard({ album, className }: AlbumCardProps) {
+export function AlbumCard({
+  loading,
+  error,
+  album,
+  className,
+}: AlbumCardProps) {
   const { playAlbum, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
+
+  if (error) return null;
+
+  if (loading) {
+    return (
+      <div className={cn("block space-y-3", className)}>
+        <Skeleton className="aspect-square w-full rounded-md" />
+        <div className="space-y-1">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+      </div>
+    );
+  }
 
   const isCurrentAlbum = currentSong?.albumId === album.id;
 

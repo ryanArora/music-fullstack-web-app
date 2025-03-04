@@ -8,11 +8,12 @@ import { TRPCReactProvider } from "~/trpc/react";
 import { MainNav } from "~/app/_components/main-nav";
 import { ThemeProvider } from "~/app/_components/theme-provider";
 import { PlayerFooterWrapper } from "~/app/_components/player-footer-wrapper";
-import { AuthProvider } from "~/app/_components/auth-provider";
+import { SessionProvider } from "~/app/_components/session-provider";
 import { UserDropdown } from "~/app/_components/user-dropdown";
 import { PlaylistSidebar } from "~/app/_components/playlist-sidebar";
 import { Toaster } from "~/app/_components/toaster";
 import Link from "next/link";
+import { auth } from "~/auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,11 +31,13 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${inter.variable}`}>
         <ThemeProvider>
-          <AuthProvider>
+          <SessionProvider session={session}>
             <TRPCReactProvider cookies={(await cookies()).toString()}>
               <div className="flex h-screen">
                 {/* Sidebar */}
@@ -92,7 +95,7 @@ export default async function RootLayout({
               </div>
               <Toaster />
             </TRPCReactProvider>
-          </AuthProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

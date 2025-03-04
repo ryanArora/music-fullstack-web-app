@@ -20,12 +20,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
   DropdownMenuPortal,
-  DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
 import { RouterOutputs, api } from "~/trpc/react";
 import Link from "next/link";
 import { useToast } from "~/app/_components/ui/use-toast";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
+import { useSession } from "next-auth/react";
+import { useSessionContext } from "./session-provider";
 
 export function SongDropdown({
   className,
@@ -37,13 +38,13 @@ export function SongDropdown({
   playlistId?: string;
 }) {
   const { toast } = useToast();
-  const { addToQueue, playSong, playNext } = usePlayerStore();
+  const { addToQueue, playNext } = usePlayerStore();
+  const session = useSessionContext();
 
   // Get user's playlists
   const { data: userPlaylists, isLoading: isLoadingPlaylists } =
     api.playlist.getUserPlaylists.useQuery(undefined, {
-      // Disable the query if there's no session (user not logged in)
-      enabled: true,
+      enabled: !!session,
     });
 
   // Add song to playlist mutation

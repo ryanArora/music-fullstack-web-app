@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, ListMusic, Plus } from "lucide-react";
@@ -18,16 +18,20 @@ import {
 import { Label } from "~/app/_components/ui/label";
 import { Input } from "~/app/_components/ui/input";
 import { Switch } from "~/app/_components/ui/switch";
-import { useSession } from "next-auth/react";
+import { useSessionContext } from "~/app/_components/session-provider";
 import { api } from "~/trpc/react";
+import { Skeleton } from "./ui/skeleton";
+import { TooltipProvider } from "./ui/tooltip";
+import { Tooltip } from "./ui/tooltip";
+import { TooltipContent } from "./ui/tooltip";
+import { TooltipTrigger } from "./ui/tooltip";
 
 export function PlaylistSidebar() {
-  const { data: session } = useSession();
+  const session = useSessionContext();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const router = useRouter();
-
   const utils = api.useUtils();
 
   const { data: playlists, isLoading } = api.playlist.getUserPlaylists.useQuery(
@@ -67,14 +71,27 @@ export function PlaylistSidebar() {
 
   return (
     <>
-      <div className="flex items-center justify-between px-4 py-2">
+      <div className="flex items-center justify-between px-4">
         <h2 className="text-lg font-semibold tracking-tight">Your Library</h2>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Create playlist">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Create playlist"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Create a playlist</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Playlist</DialogTitle>
@@ -82,7 +99,7 @@ export function PlaylistSidebar() {
                 Add a name and privacy setting for your new playlist.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Name</Label>
                 <Input
@@ -112,15 +129,12 @@ export function PlaylistSidebar() {
           </DialogContent>
         </Dialog>
       </div>
-      <ScrollArea className="h-[calc(100vh-12rem)] px-1">
-        <div className="space-y-1 p-2">
+      <ScrollArea className="px-1">
+        <div className="space-y-1 px-2">
           {isLoading ? (
             <div className="flex animate-pulse flex-col space-y-2 py-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-10 w-full rounded-md bg-muted/50"
-                ></div>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full rounded-md" />
               ))}
             </div>
           ) : (

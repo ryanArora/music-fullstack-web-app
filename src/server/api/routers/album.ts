@@ -48,7 +48,23 @@ const addPresignedUrlsToAlbum = async (
   };
 };
 
+// Helper to add presigned URLs to multiple albums
+const addPresignedUrlsToAlbums = async (
+  albums: AlbumWithRelations[],
+): Promise<AlbumWithPresignedUrls[]> => {
+  return Promise.all(albums.map(addPresignedUrlsToAlbum));
+};
+
 export const albumRouter = createTRPCRouter({
+  getFeatured: publicProcedure.query(async ({ ctx }) => {
+    const albums = await ctx.db.album.findMany({
+      include: albumInclude,
+      take: 20,
+    });
+
+    return await addPresignedUrlsToAlbums(albums);
+  }),
+
   getAll: publicProcedure
     .input(
       z.object({
@@ -82,13 +98,8 @@ export const albumRouter = createTRPCRouter({
         nextCursor = nextItem?.id;
       }
 
-      // Add presigned URLs to songs in each album
-      const albumsWithUrls = await Promise.all(
-        albums.map(addPresignedUrlsToAlbum),
-      );
-
       return {
-        items: albumsWithUrls,
+        items: await addPresignedUrlsToAlbums(albums),
         nextCursor,
       };
     }),
@@ -103,7 +114,7 @@ export const albumRouter = createTRPCRouter({
         include: albumInclude,
       });
 
-      return addPresignedUrlsToAlbum(album);
+      return await addPresignedUrlsToAlbum(album);
     }),
 
   getByArtistId: publicProcedure
@@ -119,6 +130,6 @@ export const albumRouter = createTRPCRouter({
         },
       });
 
-      return Promise.all(albums.map(addPresignedUrlsToAlbum));
+      return await addPresignedUrlsToAlbums(albums);
     }),
 });

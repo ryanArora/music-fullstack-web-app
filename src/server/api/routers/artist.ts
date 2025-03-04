@@ -4,6 +4,14 @@ import { albumInclude } from "./album";
 import { getPresignedSongUrl } from "~/server/minio";
 
 export const artistRouter = createTRPCRouter({
+  getFeatured: publicProcedure.query(async ({ ctx }) => {
+    const artists = await ctx.db.artist.findMany({
+      take: 20,
+    });
+
+    return artists;
+  }),
+
   getAll: publicProcedure
     .input(
       z.object({

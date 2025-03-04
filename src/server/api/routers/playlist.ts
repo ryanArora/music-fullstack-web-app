@@ -9,7 +9,7 @@ import {
 } from "~/server/api/trpc";
 import { getPresignedSongUrl } from "~/server/minio";
 
-const include = {
+const playlistInclude = {
   songs: {
     include: {
       song: {
@@ -34,7 +34,7 @@ const include = {
 
 // Helper function to add presigned URLs to playlist songs
 const addPresignedUrlsToPlaylist = async (
-  playlist: Prisma.PlaylistGetPayload<{ include: typeof include }>,
+  playlist: Prisma.PlaylistGetPayload<{ include: typeof playlistInclude }>,
 ) => {
   const songsWithUrls = await Promise.all(
     playlist.songs.map(async (playlistSong) => ({
@@ -54,13 +54,21 @@ const addPresignedUrlsToPlaylist = async (
 
 // Helper to add presigned URLs to multiple playlists
 const addPresignedUrlsToPlaylists = async (
-  playlists: Prisma.PlaylistGetPayload<{ include: typeof include }>[],
+  playlists: Prisma.PlaylistGetPayload<{ include: typeof playlistInclude }>[],
 ) => {
   return Promise.all(playlists.map(addPresignedUrlsToPlaylist));
 };
 
 export const playlistRouter = createTRPCRouter({
-  // Public procedures
+  getFeatured: publicProcedure.query(async ({ ctx }) => {
+    const playlists = await ctx.db.playlist.findMany({
+      include: playlistInclude,
+      take: 20,
+    });
+
+    return await addPresignedUrlsToPlaylists(playlists);
+  }),
+
   getAll: publicProcedure
     .input(
       z.object({
@@ -88,7 +96,7 @@ export const playlistRouter = createTRPCRouter({
               skip: 1, // Skip the cursor
             }
           : {}),
-        include,
+        include: playlistInclude,
       });
 
       let nextCursor: typeof cursor | undefined = undefined;
@@ -113,7 +121,7 @@ export const playlistRouter = createTRPCRouter({
         where: {
           id: input.id,
         },
-        include,
+        include: playlistInclude,
       });
 
       if (!playlist) {
@@ -141,7 +149,7 @@ export const playlistRouter = createTRPCRouter({
       where: {
         userId: ctx.session.user.id,
       },
-      include,
+      include: playlistInclude,
       orderBy: [
         { isLiked: "desc" }, // Liked songs first
         { title: "asc" }, // Then by title

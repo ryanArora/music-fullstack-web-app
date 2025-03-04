@@ -1,13 +1,11 @@
 import { type Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Calendar, Clock, Music } from "lucide-react";
-
 import { SongList } from "~/app/_components/song-list";
 import { PlaylistPlayButton } from "~/app/_components/playlist-play-button";
 import { api } from "~/trpc/server";
-
+import { PlaylistImage } from "~/app/_components/ui/playlist-image";
 interface PageProps {
   params: {
     id: string;
@@ -57,13 +55,7 @@ export default async function PlaylistPage({ params }: PageProps) {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex flex-col gap-6 md:flex-row">
         <div className="relative aspect-square h-64 w-64 overflow-hidden rounded-lg shadow-lg">
-          <Image
-            src={playlist.imageUrl ?? "/images/playlist-default.jpg"}
-            alt={playlist.title}
-            fill
-            className="object-cover"
-            priority
-          />
+          <PlaylistImage playlist={playlist} />
         </div>
 
         <div className="flex flex-col justify-end">
@@ -106,6 +98,7 @@ export default async function PlaylistPage({ params }: PageProps) {
           <SongList
             playlistSongs={playlist.songs}
             playlistId={(await params).id}
+            isLoading={false}
           />
         )}
       </div>

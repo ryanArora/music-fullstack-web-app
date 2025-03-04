@@ -7,6 +7,8 @@ import { type RouterOutputs } from "~/trpc/react";
 import { Button } from "~/app/_components/ui/button";
 import { Pause, Play } from "lucide-react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
+import { PlaylistImage } from "./ui/playlist-image";
 
 interface PlaylistCardProps {
   playlist: RouterOutputs["playlist"]["getById"];
@@ -16,6 +18,7 @@ interface PlaylistCardProps {
 export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
   const { playPlaylist, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
+  const { theme } = useTheme();
 
   const isCurrentPlaylist = playlist.songs.some(
     (playlistSong) => playlistSong.song.id === currentSong?.id,
@@ -33,8 +36,6 @@ export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
     playPlaylist(playlist);
   };
 
-  console.log(isCurrentPlaylist);
-
   return (
     <div className={cn("block space-y-3", className)}>
       {/* Image and play controls */}
@@ -42,12 +43,7 @@ export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
         className="group relative aspect-square cursor-pointer overflow-hidden rounded-md"
         onClick={handlePlayPlaylist}
       >
-        <Image
-          src={playlist.imageUrl ?? "/images/playlist-default.jpg"}
-          alt={playlist.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        <PlaylistImage playlist={playlist} />
         <div
           className={cn(
             "absolute inset-0 items-center justify-center bg-black/40 transition-all",

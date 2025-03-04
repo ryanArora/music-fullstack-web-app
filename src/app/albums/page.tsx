@@ -64,7 +64,12 @@ export default function AlbumsPage() {
         <>
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {albums.map((album) => (
-              <AlbumCard key={album.id} album={album} />
+              <AlbumCard
+                key={album.id}
+                album={album}
+                loading={false}
+                error={false}
+              />
             ))}
           </div>
 
