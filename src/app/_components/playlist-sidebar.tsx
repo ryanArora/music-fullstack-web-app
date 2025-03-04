@@ -108,6 +108,7 @@ export function PlaylistSidebar() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="My Awesome Playlist"
+                  autoComplete="off"
                 />
               </div>
               <div className="flex items-center space-x-2">
