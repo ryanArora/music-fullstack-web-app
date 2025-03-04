@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, ElementHandle } from "puppeteer";
 import inquirer from "inquirer";
 import { PrismaClient } from "@prisma/client";
 import { execSync } from "child_process";
@@ -75,34 +75,24 @@ export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
   } catch (error) {
     // Description can be null, so we don't throw here
   }
-
   const selectorAlbumsUrls =
     "ytmusic-carousel-shelf-renderer.style-scope:nth-child(2) > div:nth-child(1) > div:nth-child(1) > ytmusic-carousel-shelf-basic-header-renderer:nth-child(1) > h2:nth-child(2) > div:nth-child(2) > yt-formatted-string:nth-child(1) > a:nth-child(1)";
-  await page.waitForSelector(selectorAlbumsUrls);
-  const albumsLink = await page.$(selectorAlbumsUrls);
-  if (!albumsLink) {
-    await page.close();
-    throw new Error("Albums link not found");
-  }
+  let albumsUrl: string | null = null;
+  try {
+    await page.waitForSelector(selectorAlbumsUrls, { timeout: 1000 });
+    const albumsLink = await page.$(selectorAlbumsUrls);
+    albumsUrl = await page.evaluate(
+      (el) => el!.getAttribute("href"),
+      albumsLink,
+    );
+  } catch (error) {}
 
-  const albumsUrl = await page.evaluate(
-    (el) => el!.getAttribute("href"),
-    albumsLink,
-  );
-  if (!albumsUrl) {
-    await page.close();
-    throw new Error("Albums URL attribute not found");
-  }
-  if (!albumsUrl.startsWith("browse/")) {
-    await page.close();
-    throw new Error("Invalid albums URL format");
-  }
   await page.close();
 
   return {
     name,
     description,
-    albumsUrl: `${YOUTUBE_MUSIC_BASE_URL}/${albumsUrl}`,
+    albumsUrl: albumsUrl ? `${YOUTUBE_MUSIC_BASE_URL}/${albumsUrl}` : null,
   };
 }
 
@@ -139,6 +129,33 @@ async function getAlbumUrls(browser: Browser, albumsUrl: string) {
   return validUrls.map((url) => `${YOUTUBE_MUSIC_BASE_URL}/${url}`);
 }
 
+async function getAlbumUrlsOther(browser: Browser, artistUrl: string) {
+  const page = await browser.newPage();
+  await page.goto(artistUrl);
+
+  const selector =
+    "ytmusic-carousel-shelf-renderer.style-scope:nth-child(2) > div:nth-child(1) > ytmusic-carousel:nth-child(2) > div:nth-child(1) > ul:nth-child(1) > ytmusic-two-row-item-renderer > div:nth-child(4) > div:nth-child(1) > yt-formatted-string:nth-child(2) > a:nth-child(1)";
+  await page.waitForSelector(selector, { timeout: 1000 });
+  const albumLinks = await page.$$(selector);
+  if (!albumLinks || albumLinks.length === 0) {
+    await page.close();
+    throw new Error("No album links found");
+  }
+
+  return (
+    await Promise.all(
+      albumLinks.map(async (albumLink) => {
+        const albumUrl = await page.evaluate(
+          (el) => el!.getAttribute("href"),
+          albumLink,
+        );
+        return albumUrl;
+      }),
+    )
+  )
+    .filter((url) => url !== null)
+    .map((url) => `${YOUTUBE_MUSIC_BASE_URL}/${url}`);
+}
 async function getAlbumInfo(browser: Browser, albumUrl: string) {
   const page = await browser.newPage();
   await page.goto(albumUrl);
@@ -402,7 +419,12 @@ async function main() {
     const artistInfo = await getArtistInfo(browser, artistUrl);
     console.log(`Retrieved artist info for: ${artistInfo.name}`);
 
-    const albumUrls = await getAlbumUrls(browser, artistInfo.albumsUrl);
+    let albumUrls: string[] = [];
+    if (artistInfo.albumsUrl) {
+      albumUrls = await getAlbumUrls(browser, artistInfo.albumsUrl);
+    } else {
+      albumUrls = await getAlbumUrlsOther(browser, artistUrl);
+    }
     console.log(`Found ${albumUrls.length} albums`);
 
     const albums = [];

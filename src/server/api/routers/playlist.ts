@@ -64,6 +64,12 @@ export const playlistRouter = createTRPCRouter({
     const playlists = await ctx.db.playlist.findMany({
       include: playlistInclude,
       take: 20,
+      where: {
+        songs: {
+          some: {},
+        },
+        isPublic: true,
+      },
     });
 
     return await addPresignedUrlsToPlaylists(playlists);

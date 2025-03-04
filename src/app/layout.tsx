@@ -23,7 +23,7 @@ const inter = Inter({
 export const metadata = {
   title: "Music App",
   description: "A music streaming application",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [{ rel: "icon", url: "/favicon.svg" }],
 };
 
 export default async function RootLayout({
