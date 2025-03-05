@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { getPresignedSongUrl } from "~/server/minio";
+import { getPresignedSongUrl } from "~/server/blob";
 
 export const songRouter = createTRPCRouter({
   getAll: publicProcedure

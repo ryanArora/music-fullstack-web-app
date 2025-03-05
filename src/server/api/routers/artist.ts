@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { albumInclude } from "./album";
-import { getPresignedSongUrl } from "~/server/minio";
+import { getPresignedSongUrl } from "~/server/blob";
 
 export const artistRouter = createTRPCRouter({
   getFeatured: publicProcedure.query(async ({ ctx }) => {

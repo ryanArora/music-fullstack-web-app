@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { type Prisma } from "@prisma/client";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { getPresignedSongUrl } from "~/server/minio";
+import { getPresignedSongUrl } from "~/server/blob";
 
 export const albumInclude = {
   artist: true,

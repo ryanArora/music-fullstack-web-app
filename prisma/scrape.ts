@@ -1,16 +1,16 @@
-import puppeteer, { Browser, ElementHandle } from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 import inquirer from "inquirer";
 import { PrismaClient } from "@prisma/client";
 import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { minio } from "~/server/minio";
+import { blob } from "~/server/blob";
+import { env } from "~/env";
 
 const prisma = new PrismaClient();
 const YOUTUBE_MUSIC_BASE_URL = "https://music.youtube.com";
 const YOUTUBE_BASE_URL = "https://www.youtube.com";
-const MINIO_BUCKET = "music";
 
 export async function getArtistUrl(browser: Browser, artistName: string) {
   const page = await browser.newPage();
@@ -220,58 +220,91 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
   const songsSelector =
     "ytmusic-responsive-list-item-renderer.style-scope > div:nth-child(5) > div:nth-child(1) > yt-formatted-string:nth-child(1) > a:nth-child(1)";
   await page.waitForSelector(songsSelector);
-  const songs = await page.$$(songsSelector);
-  if (!songs || songs.length === 0) {
+  const songElements = await page.$$(songsSelector);
+  if (!songElements || songElements.length === 0) {
     await page.close();
     throw new Error("No songs found for album");
   }
 
-  const songInfo = await Promise.all(
-    songs.map(async (song) => {
-      const songData = await page.evaluate(
-        (el) => ({
-          title: el!.textContent,
-          url: el!.getAttribute("href"),
+  const songInfo = (
+    (
+      await Promise.all(
+        songElements.map(async (song) => {
+          const songData = await page.evaluate(
+            (el) => ({
+              title: el!.textContent,
+              url: el!.getAttribute("href"),
+            }),
+            song,
+          );
+          return songData;
         }),
-        song,
-      );
-      return songData;
-    }),
-  );
+      )
+    ).filter((song) => song.url !== null && song.title !== null) as {
+      title: string;
+      url: string;
+    }[]
+  )
+    .map((song) => {
+      const url = new URL(`${YOUTUBE_MUSIC_BASE_URL}/${song.url}`);
+      const videoId = url.searchParams.get("v");
+      if (!videoId) return null;
 
-  await page.close();
+      return {
+        ...song,
+        videoId,
+        url: `${YOUTUBE_BASE_URL}/watch?v=${videoId}`,
+      };
+    })
+    .filter((song) => song !== null);
 
-  const validSongs = songInfo.filter(
-    (song) =>
-      song.url !== null &&
-      song.title !== null &&
-      song.url.startsWith("watch?v="),
-  );
-
-  if (validSongs.length === 0) {
-    throw new Error("No valid songs found for album");
+  const songDurationsSelector =
+    "ytmusic-section-list-renderer.description > div:nth-child(2) > ytmusic-shelf-renderer:nth-child(1) > div:nth-child(3) > ytmusic-responsive-list-item-renderer > div:nth-child(8) > yt-formatted-string:nth-child(1)";
+  await page.waitForSelector(songDurationsSelector);
+  const songDurationElements = await page.$$(songDurationsSelector);
+  if (!songDurationElements || songDurationElements.length === 0) {
+    await page.close();
+    throw new Error("No song lengths found for album");
   }
 
-  return {
+  const songDurations = (
+    await Promise.all(
+      songDurationElements.map(async (songDurationElement) => {
+        return await page.evaluate(
+          (el) => el!.textContent,
+          songDurationElement,
+        );
+      }),
+    )
+  )
+    .filter((duration) => duration !== null)
+    .map((duration) => {
+      const parts = duration.split(":").map(Number);
+      const minutes = parts[0] || 0;
+      const seconds = parts[1] || 0;
+      return minutes * 60 + seconds;
+    });
+
+  if (songDurations.length !== songInfo.length) {
+    await page.close();
+    throw new Error("Song durations and song info lengths do not match");
+  }
+
+  const songs = songInfo.map((songInfo, index) => ({
+    ...songInfo,
+    duration: songDurations[index]!,
+  }));
+
+  const result = {
     title,
     description,
     image,
     albumType,
-    songs: validSongs.map((song) => {
-      const url = new URL(`${YOUTUBE_MUSIC_BASE_URL}/${song.url}`);
-      const videoId = url.searchParams.get("v");
-
-      if (!videoId) {
-        throw new Error("Invalid song URL: missing video ID");
-      }
-
-      return {
-        title: song.title!,
-        url: `${YOUTUBE_BASE_URL}/watch?v=${videoId}`,
-        videoId,
-      };
-    }),
+    songs,
   };
+
+  await page.close();
+  return result;
 }
 
 async function saveArtistToDatabase(artistData: {
@@ -287,22 +320,11 @@ async function saveArtistToDatabase(artistData: {
       title: string;
       url: string;
       videoId: string;
+      duration: number;
     }[];
   }[];
 }) {
   console.log("Saving artist to database...");
-
-  // Ensure the MinIO bucket exists
-  try {
-    const bucketExists = await minio.bucketExists(MINIO_BUCKET);
-    if (!bucketExists) {
-      await minio.makeBucket(MINIO_BUCKET, "us-east-1");
-      console.log(`Created MinIO bucket: ${MINIO_BUCKET}`);
-    }
-  } catch (error) {
-    console.error("Error checking/creating MinIO bucket:", error);
-    throw error;
-  }
 
   // Create the artist
   const artist = await prisma.artist.create({
@@ -335,7 +357,7 @@ async function saveArtistToDatabase(artistData: {
         const song = await prisma.song.create({
           data: {
             title: songData.title,
-            duration: 180, // Default duration in seconds
+            duration: songData.duration, // Default duration in seconds
             imageUrl: albumData.image,
             artistId: artist.id,
             albumId: album.id,
@@ -365,9 +387,14 @@ async function saveArtistToDatabase(artistData: {
 
           // Upload to MinIO
           const objectKey = `${song.id}.webm`;
-          await minio.fPutObject(MINIO_BUCKET, objectKey, tempFilePath, {
-            "Content-Type": "audio/webm",
-          });
+          await blob.fPutObject(
+            env.MINIO_BUCKET_NAME_MUSIC,
+            objectKey,
+            tempFilePath,
+            {
+              "Content-Type": "audio/webm",
+            },
+          );
 
           console.log(`Uploaded to MinIO: ${objectKey}`);
         } catch (downloadError) {
@@ -442,16 +469,19 @@ async function main() {
       albums,
     };
 
+    // Close the browser immediately after scraping is done
+    await browser.close();
+
     console.log(JSON.stringify(artist, null, 2));
 
     // Save to database
     await saveArtistToDatabase(artist);
   } catch (error) {
     console.error("Error during scraping:", error);
-  } finally {
     await browser.close();
+  } finally {
     await prisma.$disconnect();
   }
 }
 
-main().catch(console.error);
+main();

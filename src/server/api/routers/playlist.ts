@@ -7,7 +7,7 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
-import { getPresignedSongUrl } from "~/server/minio";
+import { getPresignedSongUrl } from "~/server/blob";
 
 const playlistInclude = {
   songs: {
