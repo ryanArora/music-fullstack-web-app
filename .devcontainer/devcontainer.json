@@ -6,9 +6,10 @@
     "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/devcontainers-extra/features/corepack:1": {},
     "ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers-extra/features/apt-packages:1": {
       "ppas": "yt-dlp/stable",
-      "packages": "yt-dlp,vim"
+      "packages": "yt-dlp,vim,gh"
     }
   },
   "customizations": {
