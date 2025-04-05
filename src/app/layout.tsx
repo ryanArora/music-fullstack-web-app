@@ -12,6 +12,7 @@ import { SessionProvider } from "~/app/_components/session-provider";
 import { UserDropdown } from "~/app/_components/user-dropdown";
 import { PlaylistSidebar } from "~/app/_components/playlist-sidebar";
 import { Toaster } from "~/app/_components/toaster";
+import { SearchBar } from "~/app/_components/search-bar";
 import Link from "next/link";
 import { auth } from "~/auth";
 
@@ -84,7 +85,8 @@ export default async function RootLayout({
                 {/* Main content */}
                 <div className="flex-1 overflow-y-auto pb-24">
                   {/* Header with user dropdown */}
-                  <header className="sticky top-0 z-30 flex h-16 items-center justify-end border-b bg-background px-4 md:px-6">
+                  <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
+                    <SearchBar />
                     <UserDropdown />
                   </header>
                   {children}
