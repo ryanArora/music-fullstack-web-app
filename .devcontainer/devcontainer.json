@@ -12,9 +12,9 @@
     "ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers-extra/features/apt-packages:1": {
-      "ppas": "yt-dlp/stable",
-      "packages": "yt-dlp,vim,chromium"
+      "packages": "vim,chromium"
     },
+    "ghcr.io/devcontainers-extra/features/yt-dlp:2": {},
     "ghcr.io/devcontainers/features/desktop-lite:1": {}
   },
   "forwardPorts": [6080],

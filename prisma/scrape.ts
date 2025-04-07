@@ -370,7 +370,7 @@ async function saveArtistToDatabase(artistData: {
 
           // Download audio using yt-dlp (audio only, best quality webm)
           execSync(
-            `yt-dlp -f "bestaudio[ext=webm]" -o "${tempFilePath}" ${songData.url}`,
+            `yt-dlp -f "bestaudio[ext=webm]" -o "${tempFilePath}" "${songData.url}"`,
             { stdio: "inherit" },
           );
 
@@ -423,8 +423,8 @@ async function main() {
   console.log(`Scraping data for artist: ${artistName}`);
 
   const browser = await puppeteer.launch({
+    executablePath: "/usr/bin/chromium",
     headless: false,
-    defaultViewport: null,
   });
 
   try {
