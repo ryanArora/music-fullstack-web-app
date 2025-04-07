@@ -1,11 +1,10 @@
 "use client";
 
 import { notFound } from "next/navigation";
-import { api, RouterOutputs } from "~/trpc/react";
+import { api, type RouterOutputs } from "~/trpc/react";
 import { ArtistBanner } from "~/app/_components/artist-banner";
 import { AlbumCarousel } from "~/app/_components/album-carousel";
 import { SongList } from "~/app/_components/song-list";
-import { Skeleton } from "~/app/_components/ui/skeleton";
 
 interface ArtistDetailPageProps {
   artist: RouterOutputs["artist"]["getById"];
@@ -17,13 +16,10 @@ export default function ArtistDetailPage({ artist }: ArtistDetailPageProps) {
   }
 
   // Now start the rest of the requests in parallel
-  const {
-    data: popularSongs,
-    isLoading: isLoadingPopularSongs,
-    isError: isErrorPopularSongs,
-  } = api.artist.getPopularSongs.useQuery({
-    artistId: artist.id,
-  });
+  const { data: popularSongs, isLoading: isLoadingPopularSongs } =
+    api.artist.getPopularSongs.useQuery({
+      artistId: artist.id,
+    });
 
   const {
     data: albums,

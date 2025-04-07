@@ -6,10 +6,11 @@ import { SongList } from "~/app/_components/song-list";
 import { PlaylistPlayButton } from "~/app/_components/playlist-play-button";
 import { api } from "~/trpc/server";
 import { PlaylistImage } from "~/app/_components/ui/playlist-image";
+
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({

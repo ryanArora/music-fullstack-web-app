@@ -18,7 +18,6 @@ import { Button } from "~/app/_components/ui/button";
 import { LogOut, Moon, Sun, User } from "lucide-react";
 import { signIn, signOut } from "next-auth/react";
 import { useSessionContext } from "./session-provider";
-import { Skeleton } from "./ui/skeleton";
 
 export function UserDropdown() {
   const session = useSessionContext();

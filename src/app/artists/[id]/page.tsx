@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default async function ArtistsLayout({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const artist = await api.artist.getById({ id: (await params).id });
   return <ArtistDetailPage artist={artist} />;

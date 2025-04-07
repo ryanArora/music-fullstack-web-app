@@ -8,16 +8,16 @@ import { api } from "~/trpc/server";
 import { PlayButton } from "~/app/_components/play-button";
 import { SongList } from "~/app/_components/song-list";
 
-interface AlbumPageProps {
-  params: {
+type AlbumPageProps = {
+  params: Promise<{
     id: string;
-  };
-}
+  }>;
+};
 
 export async function generateMetadata({
   params,
 }: AlbumPageProps): Promise<Metadata> {
-  const album = await api.album.getById({ id: params.id });
+  const album = await api.album.getById({ id: (await params).id });
 
   if (!album) {
     return {
@@ -32,7 +32,7 @@ export async function generateMetadata({
 }
 
 export default async function AlbumPage({ params }: AlbumPageProps) {
-  const album = await api.album.getById({ id: params.id });
+  const album = await api.album.getById({ id: (await params).id });
 
   if (!album) {
     notFound();

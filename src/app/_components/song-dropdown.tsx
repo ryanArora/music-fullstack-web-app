@@ -21,7 +21,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuPortal,
 } from "./ui/dropdown-menu";
-import { RouterOutputs, api } from "~/trpc/react";
+import { type RouterOutputs, api } from "~/trpc/react";
 import Link from "next/link";
 import { useToast } from "~/app/_components/ui/use-toast";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
@@ -176,7 +176,7 @@ export function SongDropdown({
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
-            navigator.clipboard.writeText(
+            void navigator.clipboard.writeText(
               `${window.location.origin}/albums/${song.albumId}`,
             );
 

@@ -29,7 +29,6 @@ import {
 } from "~/app/_components/ui/tooltip";
 import { cn } from "~/lib/utils";
 import { QueueDialog } from "~/app/_components/queue-dialog";
-import { useSession } from "next-auth/react";
 import { api } from "~/trpc/react";
 import { SongDropdown } from "./song-dropdown";
 import { useSessionContext } from "./session-provider";

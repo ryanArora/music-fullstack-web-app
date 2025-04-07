@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical, Trash2, Share2, Edit, Globe, Lock } from "lucide-react";
+import { MoreVertical, Trash2, Share2, Globe, Lock } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { RouterOutputs, api } from "~/trpc/react";
+import { type RouterOutputs, api } from "~/trpc/react";
 import { useToast } from "~/app/_components/ui/use-toast";
 
 export function PlaylistDropdown({
@@ -87,7 +87,7 @@ export function PlaylistDropdown({
         <DropdownMenuItem
           onClick={(e) => {
             e.stopPropagation();
-            navigator.clipboard.writeText(
+            void navigator.clipboard.writeText(
               `${window.location.origin}/playlists/${playlist.id}`,
             );
             toast({

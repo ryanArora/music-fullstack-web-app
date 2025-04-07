@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { cn, formatDuration } from "~/lib/utils";
-import { RouterOutputs } from "~/trpc/react";
+import { type RouterOutputs } from "~/trpc/react";
 import { SongDropdown } from "./song-dropdown";
 import { Skeleton } from "./ui/skeleton";
 

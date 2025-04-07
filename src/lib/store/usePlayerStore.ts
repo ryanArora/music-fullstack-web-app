@@ -357,7 +357,7 @@ export const usePlayerStore = create<PlayerState>()(
 
         // Add a song to the top of the queue
         playNext: (song) => {
-          const { queue, queueIndex } = get();
+          const { queue } = get();
 
           // If queue is empty, play the song immediately
           if (queue.length === 0) {

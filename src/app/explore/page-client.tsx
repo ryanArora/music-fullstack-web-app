@@ -32,7 +32,7 @@ export default function ExplorePage() {
   } = api.playlist.getFeatured.useQuery();
 
   // Extract songs from the response
-  const songs = songsData?.items || [];
+  const songs = songsData?.items ?? [];
 
   return (
     <main className="container mx-auto min-h-screen px-4 py-8">
@@ -48,7 +48,7 @@ export default function ExplorePage() {
             ? { items: undefined, loading: true, error: false }
             : isErrorAlbums
               ? { items: undefined, loading: false, error: true }
-              : { items: albums || [], loading: false, error: false }
+              : { items: albums ?? [], loading: false, error: false }
         }
       />
 
@@ -66,7 +66,7 @@ export default function ExplorePage() {
             ? { items: undefined, loading: true, error: false }
             : isErrorArtists
               ? { items: undefined, loading: false, error: true }
-              : { items: artists || [], loading: false, error: false }
+              : { items: artists ?? [], loading: false, error: false }
         }
       />
 
@@ -77,7 +77,7 @@ export default function ExplorePage() {
             ? { items: undefined, loading: true, error: false }
             : isErrorPlaylists
               ? { items: undefined, loading: false, error: true }
-              : { items: playlists || [], loading: false, error: false }
+              : { items: playlists ?? [], loading: false, error: false }
         }
       />
     </main>
