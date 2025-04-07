@@ -42,5 +42,8 @@
       }
     }
   },
-  "postCreateCommand": "pnpm install"
+  "postCreateCommand": "pnpm install",
+  "containerEnv": {
+    "NEXT_TELEMETRY_DISABLED": "1"
+  }
 }
