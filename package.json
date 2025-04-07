@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
+    "db:scrape": "tsx prisma/scrape.ts",
     "dev": "next dev --turbo",
     "format": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:fix": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
