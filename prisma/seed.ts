@@ -15,11 +15,19 @@ async function clearBlob() {
   const buckets = await blob.listBuckets();
 
   for (const bucket of buckets) {
-    const objects = await blob.listObjects(bucket.name);
+    const objects = blob.listObjects(bucket.name);
 
     for await (const object of objects) {
-      await blob.removeObject(bucket.name, object.name);
-      console.log(`Removed object ${object.name} from bucket ${bucket.name}`);
+      const obj = object as unknown;
+      if (
+        typeof obj !== "object" ||
+        !obj ||
+        !("name" in obj) ||
+        typeof obj.name !== "string"
+      )
+        continue;
+      await blob.removeObject(bucket.name, obj.name);
+      console.log(`Removed object ${obj.name} from bucket ${bucket.name}`);
     }
 
     await blob.removeBucket(bucket.name);
@@ -39,6 +47,6 @@ main()
     console.error("Error seeding database:", e);
     process.exit(1);
   })
-  .finally(async () => {
-    await db.$disconnect();
+  .finally(() => {
+    void db.$disconnect();
   });

@@ -12,15 +12,15 @@
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
     "dev": "next dev --turbo",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
-    "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
+    "format": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
+    "format:fix": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "postinstall": "prisma generate",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "preview": "next build && next start",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "env": "./scripts/generate-env.sh > .env"
+    "generate-env": "./scripts/generate-env.sh > .env"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",

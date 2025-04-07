@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { type Browser } from "puppeteer";
 import inquirer from "inquirer";
 import { PrismaClient } from "@prisma/client";
 import { execSync } from "child_process";
@@ -19,7 +19,7 @@ export async function getArtistUrl(browser: Browser, artistName: string) {
   const selectorImage =
     "ytmusic-thumbnail-renderer.ytmusic-card-shelf-renderer > yt-img-shadow:nth-child(1) > img:nth-child(1)";
   await page.waitForSelector(selectorImage);
-  const image = await page.$eval(selectorImage, (el) => el!.src);
+  const image = await page.$eval(selectorImage, (el) => el.src);
   if (!image) {
     await page.close();
     throw new Error("Artist image not found");
@@ -33,7 +33,7 @@ export async function getArtistUrl(browser: Browser, artistName: string) {
   if (!artistPageLink) throw new Error("Artist page link not found");
 
   const artistPageUrl = await page.evaluate(
-    (el) => el!.getAttribute("href"),
+    (el) => el.getAttribute("href"),
     artistPageLink,
   );
   if (!artistPageUrl) throw new Error("Artist page URL attribute not found");
@@ -55,10 +55,10 @@ export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
   let name: string;
   try {
     await page.waitForSelector(selectorName, { timeout: 1000 });
-    const nameText = await page.$eval(selectorName, (el) => el!.textContent);
+    const nameText = await page.$eval(selectorName, (el) => el.textContent);
     if (!nameText) throw new Error("Artist name not found");
     name = nameText;
-  } catch (error) {
+  } catch (_) {
     await page.close();
     throw new Error("Failed to extract artist name");
   }
@@ -68,11 +68,8 @@ export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
   let description: string | null = null;
   try {
     await page.waitForSelector(selectorDescription, { timeout: 1000 });
-    description = await page.$eval(
-      selectorDescription,
-      (el) => el!.textContent,
-    );
-  } catch (error) {
+    description = await page.$eval(selectorDescription, (el) => el.textContent);
+  } catch (_) {
     // Description can be null, so we don't throw here
   }
   const selectorAlbumsUrls =
@@ -85,7 +82,7 @@ export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
       (el) => el!.getAttribute("href"),
       albumsLink,
     );
-  } catch (error) {}
+  } catch (_) {}
 
   await page.close();
 
@@ -112,7 +109,7 @@ async function getAlbumUrls(browser: Browser, albumsUrl: string) {
   const albumUrls = await Promise.all(
     albumLinks.map(async (albumLink) => {
       const albumUrl = await page.evaluate(
-        (el) => el!.getAttribute("href"),
+        (el) => el.getAttribute("href"),
         albumLink,
       );
       return albumUrl;
@@ -146,7 +143,7 @@ async function getAlbumUrlsOther(browser: Browser, artistUrl: string) {
     await Promise.all(
       albumLinks.map(async (albumLink) => {
         const albumUrl = await page.evaluate(
-          (el) => el!.getAttribute("href"),
+          (el) => el.getAttribute("href"),
           albumLink,
         );
         return albumUrl;
@@ -162,7 +159,7 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
 
   const titleSelector = "h1.style-scope > yt-formatted-string:nth-child(1)";
   await page.waitForSelector(titleSelector);
-  const title = await page.$eval(titleSelector, (el) => el!.textContent);
+  const title = await page.$eval(titleSelector, (el) => el.textContent);
   if (!title) {
     await page.close();
     throw new Error("Album title not found");
@@ -172,11 +169,8 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
   let description: string | null = null;
   try {
     await page.waitForSelector(descriptionSelector, { timeout: 1000 });
-    description = await page.$eval(
-      descriptionSelector,
-      (el) => el!.textContent,
-    );
-  } catch (error) {
+    description = await page.$eval(descriptionSelector, (el) => el.textContent);
+  } catch (_) {
     // Description can be null, so we don't throw here
   }
 
@@ -187,7 +181,7 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
     await page.waitForSelector(albumTypeSelector, { timeout: 1000 });
     const albumTypeRaw = await page.$eval(
       albumTypeSelector,
-      (el) => el!.textContent,
+      (el) => el.textContent,
     );
     if (albumTypeRaw) {
       switch (albumTypeRaw) {
@@ -204,14 +198,14 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
           albumType = "ALBUM";
       }
     }
-  } catch (error) {
+  } catch (_) {
     // Use default album type if not found
   }
 
   const imageSelector =
     "ytmusic-thumbnail-renderer.thumbnail > yt-img-shadow:nth-child(1) > img:nth-child(1)";
   await page.waitForSelector(imageSelector);
-  const image = await page.$eval(imageSelector, (el) => el!.src);
+  const image = await page.$eval(imageSelector, (el) => el.src);
   if (!image) {
     await page.close();
     throw new Error("Album image not found");
@@ -232,8 +226,8 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
         songElements.map(async (song) => {
           const songData = await page.evaluate(
             (el) => ({
-              title: el!.textContent,
-              url: el!.getAttribute("href"),
+              title: el.textContent,
+              url: el.getAttribute("href"),
             }),
             song,
           );
@@ -270,18 +264,15 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
   const songDurations = (
     await Promise.all(
       songDurationElements.map(async (songDurationElement) => {
-        return await page.evaluate(
-          (el) => el!.textContent,
-          songDurationElement,
-        );
+        return await page.evaluate((el) => el.textContent, songDurationElement);
       }),
     )
   )
     .filter((duration) => duration !== null)
     .map((duration) => {
       const parts = duration.split(":").map(Number);
-      const minutes = parts[0] || 0;
-      const seconds = parts[1] || 0;
+      const minutes = parts[0] ?? 0;
+      const seconds = parts[1] ?? 0;
       return minutes * 60 + seconds;
     });
 
@@ -420,7 +411,7 @@ async function saveArtistToDatabase(artistData: {
 
 async function main() {
   // Prompt for artist name
-  const answers = await inquirer.prompt([
+  const answers: { artistName: string } = await inquirer.prompt([
     {
       type: "input",
       name: "artistName",
@@ -484,4 +475,4 @@ async function main() {
   }
 }
 
-main();
+void main();
