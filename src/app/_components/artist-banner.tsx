@@ -10,14 +10,14 @@ interface ArtistBannerProps {
 
 export function ArtistBanner({ artist, description }: ArtistBannerProps) {
   return (
-    <div className="relative h-80 w-full overflow-hidden rounded-lg">
+    <div className="relative h-[30rem] w-full overflow-hidden rounded-lg">
       <div className="absolute inset-0">
         <Image
           src={artist.imageUrl}
           alt={artist.name}
           className="h-full w-full object-cover"
           width={1200}
-          height={400}
+          height={800}
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />

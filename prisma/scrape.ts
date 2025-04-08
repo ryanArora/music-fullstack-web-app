@@ -16,15 +16,6 @@ export async function getArtistUrl(browser: Browser, artistName: string) {
   const page = await browser.newPage();
   await page.goto(`${YOUTUBE_MUSIC_BASE_URL}/search?q=${artistName}`);
 
-  const selectorImage =
-    "ytmusic-thumbnail-renderer.ytmusic-card-shelf-renderer > yt-img-shadow:nth-child(1) > img:nth-child(1)";
-  await page.waitForSelector(selectorImage);
-  const image = await page.$eval(selectorImage, (el) => el.src);
-  if (!image) {
-    await page.close();
-    throw new Error("Artist image not found");
-  }
-
   const selector =
     "html.inactive-player.no-focus-outline body ytmusic-app ytmusic-app-layout#layout.style-scope.ytmusic-app div#content.style-scope.ytmusic-app ytmusic-search-page#search-page.style-scope.ytmusic-app ytmusic-tabbed-search-results-renderer.style-scope.ytmusic-search-page div.content.style-scope.ytmusic-tabbed-search-results-renderer ytmusic-section-list-renderer.style-scope.ytmusic-tabbed-search-results-renderer div#contents.style-scope.ytmusic-section-list-renderer ytmusic-card-shelf-renderer.style-scope.ytmusic-section-list-renderer div.card-container.style-scope.ytmusic-card-shelf-renderer div.card-content-container.style-scope.ytmusic-card-shelf-renderer div.main-card-container.style-scope.ytmusic-card-shelf-renderer div.main-card-content-container.style-scope.ytmusic-card-shelf-renderer div.details-container.style-scope.ytmusic-card-shelf-renderer div.metadata-container.style-scope.ytmusic-card-shelf-renderer yt-formatted-string.title.style-scope.ytmusic-card-shelf-renderer a.yt-simple-endpoint.style-scope.yt-formatted-string";
 
@@ -43,7 +34,6 @@ export async function getArtistUrl(browser: Browser, artistName: string) {
   await page.close();
   return {
     url: `${YOUTUBE_MUSIC_BASE_URL}/${artistPageUrl}`,
-    image,
   };
 }
 
@@ -84,12 +74,23 @@ export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
     );
   } catch (_) {}
 
+  const selectorBannerImg =
+    "html.no-focus-outline body ytmusic-app ytmusic-app-layout#layout.style-scope.ytmusic-app div#content.style-scope.ytmusic-app ytmusic-browse-response#browse-page.style-scope.ytmusic-app div.background-gradient.style-scope.ytmusic-browse-response div#header.style-scope.ytmusic-browse-response ytmusic-immersive-header-renderer.style-scope.ytmusic-browse-response ytmusic-fullbleed-thumbnail-renderer.image.style-scope.ytmusic-immersive-header-renderer picture.style-scope.ytmusic-fullbleed-thumbnail-renderer img.image.style-scope.ytmusic-fullbleed-thumbnail-renderer";
+  let imageUrl: string | null = null;
+  try {
+    await page.waitForSelector(selectorBannerImg, { timeout: 1000 });
+    imageUrl = await page.$eval(selectorBannerImg, (el) =>
+      el!.getAttribute("src"),
+    );
+  } catch (_) {}
+
   await page.close();
 
   return {
     name,
     description,
     albumsUrl: albumsUrl ? `${YOUTUBE_MUSIC_BASE_URL}/${albumsUrl}` : null,
+    imageUrl: imageUrl ?? "/images/default-artist.jpg",
   };
 }
 
@@ -205,8 +206,8 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
   const imageSelector =
     "ytmusic-thumbnail-renderer.thumbnail > yt-img-shadow:nth-child(1) > img:nth-child(1)";
   await page.waitForSelector(imageSelector);
-  const image = await page.$eval(imageSelector, (el) => el.src);
-  if (!image) {
+  const imageUrl = await page.$eval(imageSelector, (el) => el.src);
+  if (!imageUrl) {
     await page.close();
     throw new Error("Album image not found");
   }
@@ -289,7 +290,7 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
   const result = {
     title,
     description,
-    image,
+    imageUrl,
     albumType,
     songs,
   };
@@ -301,10 +302,10 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
 async function saveArtistToDatabase(artistData: {
   name: string;
   description: string | null;
-  image: string;
+  imageUrl: string;
   albums: {
     title: string;
-    image: string;
+    imageUrl: string;
     description: string | null;
     albumType: "ALBUM" | "EP" | "SINGLE";
     songs: {
@@ -321,7 +322,7 @@ async function saveArtistToDatabase(artistData: {
   const artist = await prisma.artist.create({
     data: {
       name: artistData.name,
-      imageUrl: artistData.image,
+      imageUrl: artistData.imageUrl,
     },
   });
 
@@ -332,7 +333,7 @@ async function saveArtistToDatabase(artistData: {
     const album = await prisma.album.create({
       data: {
         title: albumData.title,
-        imageUrl: albumData.image,
+        imageUrl: albumData.imageUrl,
         artistId: artist.id,
         releaseDate: new Date(),
         type: albumData.albumType,
@@ -349,7 +350,7 @@ async function saveArtistToDatabase(artistData: {
           data: {
             title: songData.title,
             duration: songData.duration, // Default duration in seconds
-            imageUrl: albumData.image,
+            imageUrl: albumData.imageUrl,
             artistId: artist.id,
             albumId: album.id,
             genre: "Unknown", // Default genre
@@ -428,10 +429,7 @@ async function main() {
   });
 
   try {
-    const { url: artistUrl, image: artistImage } = await getArtistUrl(
-      browser,
-      artistName,
-    );
+    const { url: artistUrl } = await getArtistUrl(browser, artistName);
     console.log(`Found artist URL: ${artistUrl}`);
 
     const artistInfo = await getArtistInfo(browser, artistUrl);
@@ -445,7 +443,7 @@ async function main() {
     }
     console.log(`Found ${albumUrls.length} albums`);
 
-    const albums = [];
+    const albums: Awaited<ReturnType<typeof getAlbumInfo>>[] = [];
 
     for (const albumUrl of albumUrls) {
       console.log(`Processing album: ${albumUrl}`);
@@ -456,8 +454,14 @@ async function main() {
     const artist = {
       name: artistInfo.name,
       description: artistInfo.description,
-      image: artistImage,
-      albums,
+      imageUrl: artistInfo.imageUrl,
+      albums: albums.map((album) => ({
+        title: album.title,
+        imageUrl: album.imageUrl,
+        description: album.description,
+        albumType: album.albumType,
+        songs: album.songs,
+      })),
     };
 
     // Close the browser immediately after scraping is done
@@ -466,7 +470,18 @@ async function main() {
     console.log(JSON.stringify(artist, null, 2));
 
     // Save to database
-    await saveArtistToDatabase(artist);
+    await saveArtistToDatabase({
+      name: artistInfo.name,
+      description: artistInfo.description,
+      imageUrl: artistInfo.imageUrl,
+      albums: albums.map((album) => ({
+        title: album.title,
+        imageUrl: album.imageUrl,
+        description: album.description,
+        albumType: album.albumType,
+        songs: album.songs,
+      })),
+    });
   } catch (error) {
     console.error("Error during scraping:", error);
     await browser.close();
