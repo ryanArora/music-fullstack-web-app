@@ -80,7 +80,7 @@ export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
   try {
     await page.waitForSelector(selectorBannerImg, { timeout: 1000 });
     imageUrl = await page.$eval(selectorBannerImg, (el) =>
-      el!.getAttribute("src"),
+      el.getAttribute("src"),
     );
   } catch (_) {}
 
