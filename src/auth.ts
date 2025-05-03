@@ -26,19 +26,23 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       clientId: env.DISCORD_CLIENT_ID,
       clientSecret: env.DISCORD_CLIENT_SECRET,
     }),
-    Credentials({
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      authorize: async () => {
-        return {
-          id: "tester",
-          name: "Tester",
-          email: "tester@example.com",
-        };
-      },
-    }),
+    ...(env.NEXT_PUBLIC_IS_STAGING
+      ? [
+          Credentials({
+            credentials: {
+              email: { label: "Email", type: "email" },
+              password: { label: "Password", type: "password" },
+            },
+            authorize: async () => {
+              return {
+                id: "tester",
+                name: "Tester",
+                email: "tester@example.com",
+              };
+            },
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     session: async ({ session, token }) => {
