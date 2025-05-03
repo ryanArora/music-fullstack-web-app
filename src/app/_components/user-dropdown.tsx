@@ -41,7 +41,7 @@ export function UserDropdown() {
               <span>Log in</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end">
+          <DropdownMenuContent className="w-64" align="end">
             <DropdownMenuItem
               onClick={() => {
                 void signIn("credentials");
@@ -49,7 +49,9 @@ export function UserDropdown() {
               className="cursor-pointer"
             >
               <User className="mr-2 h-4 w-4" />
-              <span>Log in as a Tester</span>
+              <span className="font-bold underline">
+                Log in as a Tester (One Click)
+              </span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
