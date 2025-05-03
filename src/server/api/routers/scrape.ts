@@ -1,10 +1,27 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { spawn } from "child_process";
-import { EventEmitter } from "events";
+import EventEmitter from "node:events";
+import { on } from "node:events";
 
 let isScrapingInProgress = false;
-const scrapeEmitter = new EventEmitter();
+
+type EventMap<T> = Record<keyof T, any[]>;
+class IterableEventEmitter<T extends EventMap<T>> extends EventEmitter {
+  toIterable<TEventName extends keyof T & string>(
+    eventName: TEventName,
+    opts?: NonNullable<Parameters<typeof on>[2]>,
+  ): AsyncIterable<T[TEventName]> {
+    return on(this as any, eventName, opts) as any;
+  }
+}
+
+interface ScrapeEvents {
+  progress: [data: string];
+  error: [error: string];
+}
+
+const ee = new IterableEventEmitter<ScrapeEvents>();
 
 export const scrapeRouter = createTRPCRouter({
   scrapeArtist: publicProcedure
@@ -31,14 +48,14 @@ export const scrapeRouter = createTRPCRouter({
             const output = data.toString();
             outputData += output;
             console.log(`Scrape output: ${output}`);
-            scrapeEmitter.emit("progress", output);
+            ee.emit("progress", output);
           });
 
           scrapeProcess.stderr.on("data", (data) => {
             const error = data.toString();
             errorData += error;
             console.error(`Scrape error: ${error}`);
-            scrapeEmitter.emit("error", error);
+            ee.emit("error", error);
           });
 
           scrapeProcess.on("close", (code) => {
@@ -80,4 +97,16 @@ export const scrapeRouter = createTRPCRouter({
         isScrapingInProgress = false;
       }
     }),
+
+  progress: publicProcedure.subscription(async function* ({ signal }) {
+    for await (const [data] of ee.toIterable("progress", { signal })) {
+      yield data as string;
+    }
+  }),
+
+  error: publicProcedure.subscription(async function* ({ signal }) {
+    for await (const [data] of ee.toIterable("error", { signal })) {
+      yield data as string;
+    }
+  }),
 });

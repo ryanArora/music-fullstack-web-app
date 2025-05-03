@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "~/app/_components/ui/button";
 import { Input } from "~/app/_components/ui/input";
 import { api } from "~/trpc/react";
@@ -10,6 +10,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "~/app/_components/ui/alert";
+import { ScrollArea } from "~/app/_components/ui/scroll-area";
 
 export default function ScrapePage() {
   const [artistQuery, setArtistQuery] = useState("");
@@ -18,6 +19,9 @@ export default function ScrapePage() {
     success: boolean;
     message: string;
   } | null>(null);
+  const [progressLogs, setProgressLogs] = useState<string[]>([]);
+
+  const progressScrollRef = useRef<HTMLDivElement>(null);
 
   const scrapeArtist = api.scrape.scrapeArtist.useMutation({
     onSuccess: (data) => {
@@ -36,13 +40,35 @@ export default function ScrapePage() {
     },
   });
 
+  api.scrape.progress.useSubscription(undefined, {
+    enabled: scrapeArtist.isPending,
+    onData: (data) => {
+      setProgressLogs((prev) => [...prev, data]);
+    },
+  });
+
+  api.scrape.error.useSubscription(undefined, {
+    enabled: scrapeArtist.isPending,
+    onData: (data) => {
+      setProgressLogs((prev) => [...prev, data]);
+    },
+  });
+
   const handleScrape = () => {
     if (!artistQuery.trim()) return;
 
     setIsComplete(false);
     setResult(null);
+    setProgressLogs([]);
     scrapeArtist.mutate({ artistName: artistQuery });
   };
+
+  // Handle scrolling for progress logs
+  useEffect(() => {
+    if (progressLogs.length > 0 && progressScrollRef.current) {
+      progressScrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [progressLogs]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -83,6 +109,22 @@ export default function ScrapePage() {
             Please wait while we scrape data for {artistQuery}...
           </AlertDescription>
         </Alert>
+      )}
+
+      {progressLogs.length > 0 && (
+        <div className="mt-4">
+          <h2 className="mb-2 text-xl font-semibold">Logs</h2>
+          <ScrollArea className="h-96 rounded-md border p-4">
+            <div className="font-mono text-sm">
+              {progressLogs.map((log, index) => (
+                <div key={index} className="py-1">
+                  {log}
+                </div>
+              ))}
+              <div ref={progressScrollRef} />
+            </div>
+          </ScrollArea>
+        </div>
       )}
 
       {isComplete && result && (
