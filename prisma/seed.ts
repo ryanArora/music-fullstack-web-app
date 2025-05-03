@@ -43,6 +43,23 @@ async function main() {
   await blob.makeBucket(env.MINIO_BUCKET_NAME_ALBUM_IMAGES);
   await blob.makeBucket(env.MINIO_BUCKET_NAME_ARTIST_IMAGES);
   await blob.makeBucket(env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES);
+
+  await db.user.create({
+    data: {
+      id: "tester",
+      name: "Tester",
+      email: "tester@example.com",
+      playlists: {
+        create: [
+          {
+            title: "Liked Songs",
+            isLiked: true,
+            isPublic: false,
+          },
+        ],
+      },
+    },
+  });
 }
 
 main()

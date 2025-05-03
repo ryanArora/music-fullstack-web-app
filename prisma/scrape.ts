@@ -91,7 +91,7 @@ export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
     name,
     description,
     albumsUrl: albumsUrl ? `${YOUTUBE_MUSIC_BASE_URL}/${albumsUrl}` : null,
-    imageUrl: imageUrl ?? "/images/default-artist.jpg",
+    imageUrl: imageUrl ?? null,
   };
 }
 
@@ -300,18 +300,54 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
   return result;
 }
 
-async function uploadImage(id: string, url: string, bucket: string) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`Failed to fetch image: ${url}`);
-      return null;
-    }
+async function uploadImage(id: string, url: string | null, bucket: string) {
+  let imageBuffer: ArrayBuffer;
 
-    const imageBuffer = await response.arrayBuffer();
+  if (!url) {
+    console.log(`No image URL provided, using default avatar image for ${id}`);
+    // Read the default avatar image from the public directory
+    const defaultImagePath = path.join(
+      process.cwd(),
+      "public",
+      "images",
+      "avatar-default.webp",
+    );
+    imageBuffer = await fs.promises.readFile(defaultImagePath);
+  } else {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.error(
+          `Failed to fetch image: ${url}, using default image instead`,
+        );
+        const defaultImagePath = path.join(
+          process.cwd(),
+          "public",
+          "images",
+          "avatar-default.webp",
+        );
+        imageBuffer = await fs.promises.readFile(defaultImagePath);
+      } else {
+        imageBuffer = await response.arrayBuffer();
+      }
+    } catch (error) {
+      console.error(
+        `Error fetching image: ${error}, using default image instead`,
+      );
+      const defaultImagePath = path.join(
+        process.cwd(),
+        "public",
+        "images",
+        "avatar-default.webp",
+      );
+      imageBuffer = await fs.promises.readFile(defaultImagePath);
+    }
+  }
+
+  try {
     const webpBuffer = await sharp(Buffer.from(imageBuffer)).webp().toBuffer();
     await blob.putObject(bucket, `${id}.webp`, webpBuffer);
-    console.log(`Uploaded ${url} to blob in bucket ${bucket} as ${id}.webp`);
+    console.log(`Uploaded image to blob in bucket ${bucket} as ${id}.webp`);
   } catch (error) {
     console.error("Error converting image to webp:", error);
   }
