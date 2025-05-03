@@ -438,16 +438,22 @@ async function saveArtistToDatabase(artistData: {
 }
 
 async function main() {
-  // Prompt for artist name
-  const answers: { artistName: string } = await inquirer.prompt([
-    {
-      type: "input",
-      name: "artistName",
-      message: "Enter the name of the artist you want to scrape:",
-    },
-  ]);
+  let artistName: string | undefined = undefined;
+  if (process.argv.length > 2) {
+    artistName = process.argv[2];
+  }
 
-  const artistName = answers.artistName;
+  if (!artistName) {
+    const answers: { artistName: string } = await inquirer.prompt([
+      {
+        type: "input",
+        name: "artistName",
+        message: "Enter the name of the artist you want to scrape:",
+      },
+    ]);
+    artistName = answers.artistName;
+  }
+
   console.log(`Scraping data for artist: ${artistName}`);
 
   const browser = await puppeteer.launch({

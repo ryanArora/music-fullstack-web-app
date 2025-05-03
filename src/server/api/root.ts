@@ -4,6 +4,7 @@ import { albumRouter } from "~/server/api/routers/album";
 import { playlistRouter } from "~/server/api/routers/playlist";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { searchRouter } from "./routers/search";
+import { scrapeRouter } from "./routers/scrape";
 
 /**
  * This is the primary router for your server.
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
   album: albumRouter,
   playlist: playlistRouter,
   search: searchRouter,
+  scrape: scrapeRouter,
 });
 
 // export type definition of API

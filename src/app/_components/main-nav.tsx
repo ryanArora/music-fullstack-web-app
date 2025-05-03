@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Disc, ListMusic, Radio, UserRound } from "lucide-react";
+import { Disc, ListMusic, Radio, UserRound, ScanSearch } from "lucide-react";
 
 import { cn } from "~/lib/utils";
 
@@ -26,6 +26,11 @@ const navItems = [
     name: "Playlists",
     href: "/playlists",
     icon: ListMusic,
+  },
+  {
+    name: "Scrape Artist",
+    href: "/scrape",
+    icon: ScanSearch,
   },
 ];
 
