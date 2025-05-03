@@ -8,25 +8,23 @@ import {
   protectedProcedure,
 } from "~/server/api/trpc";
 import {
+  blob,
+  getPresignedAlbumImageUrl,
+  getPresignedArtistImageUrl,
   getPresignedPlaylistImageUrl,
   getPresignedSongUrl,
-  blob,
 } from "~/server/blob";
 import { env } from "~/env";
-import { stat } from "fs";
 
 const playlistInclude = {
   songs: {
     include: {
       song: {
         include: {
-          artist: true,
           album: true,
+          artist: true,
         },
       },
-    },
-    orderBy: {
-      order: "asc",
     },
   },
   user: {
@@ -38,33 +36,44 @@ const playlistInclude = {
   },
 } satisfies Prisma.PlaylistInclude;
 
-// Helper function to add presigned URLs to playlist songs
-const addPresignedUrlsToPlaylist = async (
-  playlist: Prisma.PlaylistGetPayload<{ include: typeof playlistInclude }>,
-) => {
-  const songsWithUrls = await Promise.all(
-    playlist.songs.map(async (playlistSong) => ({
-      ...playlistSong,
-      song: {
-        ...playlistSong.song,
-        url: await getPresignedSongUrl(playlistSong.song.id),
-      },
-    })),
-  );
+export type PlaylistWithoutPresignedUrls = Prisma.PlaylistGetPayload<{
+  include: typeof playlistInclude;
+}>;
 
+export async function playlistWithPresignedUrls(
+  playlist: PlaylistWithoutPresignedUrls,
+) {
   return {
     ...playlist,
     imageUrl: await getPresignedPlaylistImageUrl(playlist.id),
-    songs: songsWithUrls,
+    songs: await Promise.all(
+      playlist.songs.map(async (song) => ({
+        ...song,
+        song: {
+          ...song.song,
+          url: await getPresignedSongUrl(song.id),
+          imageUrl: await getPresignedAlbumImageUrl(song.song.albumId),
+          album: {
+            ...song.song.album,
+            imageUrl: await getPresignedAlbumImageUrl(song.song.albumId),
+          },
+          artist: {
+            ...song.song.artist,
+            imageUrl: await getPresignedArtistImageUrl(song.song.artistId),
+          },
+        },
+      })),
+    ),
   };
-};
+}
 
-// Helper to add presigned URLs to multiple playlists
-const addPresignedUrlsToPlaylists = async (
-  playlists: Prisma.PlaylistGetPayload<{ include: typeof playlistInclude }>[],
-) => {
-  return Promise.all(playlists.map(addPresignedUrlsToPlaylist));
-};
+export async function playlistsWithPresignedUrls(
+  playlists: PlaylistWithoutPresignedUrls[],
+) {
+  return await Promise.all(playlists.map(playlistWithPresignedUrls));
+}
+
+export type Playlist = Awaited<ReturnType<typeof playlistWithPresignedUrls>>;
 
 export const playlistRouter = createTRPCRouter({
   getFeatured: publicProcedure.query(async ({ ctx }) => {
@@ -79,7 +88,7 @@ export const playlistRouter = createTRPCRouter({
       },
     });
 
-    return await addPresignedUrlsToPlaylists(playlists);
+    return await playlistsWithPresignedUrls(playlists);
   }),
 
   getAll: publicProcedure
@@ -118,11 +127,8 @@ export const playlistRouter = createTRPCRouter({
         nextCursor = nextItem?.id;
       }
 
-      // Add presigned URLs to songs
-      const playlistsWithUrls = await addPresignedUrlsToPlaylists(playlists);
-
       return {
-        items: playlistsWithUrls,
+        items: await playlistsWithPresignedUrls(playlists),
         nextCursor,
       };
     }),
@@ -147,8 +153,7 @@ export const playlistRouter = createTRPCRouter({
         });
       }
 
-      // Add presigned URLs to songs
-      return addPresignedUrlsToPlaylist(playlist);
+      return await playlistWithPresignedUrls(playlist);
     }),
 
   // Protected procedures (requires authentication)
@@ -297,7 +302,7 @@ export const playlistRouter = createTRPCRouter({
           `${playlist.id}.webp`,
         );
         imageExists = true;
-      } catch (error) {
+      } catch (_error) {
         imageExists = false;
       }
 
@@ -432,7 +437,7 @@ export const playlistRouter = createTRPCRouter({
             `${likedPlaylist.id}.webp`,
           );
           imageExists = true;
-        } catch (error) {
+        } catch (_error) {
           imageExists = false;
         }
 

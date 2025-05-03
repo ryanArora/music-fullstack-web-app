@@ -1,61 +1,46 @@
 import { z } from "zod";
 import { type Prisma } from "@prisma/client";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { getPresignedAlbumImageUrl, getPresignedSongUrl } from "~/server/blob";
+import {
+  getPresignedAlbumImageUrl,
+  getPresignedArtistImageUrl,
+  getPresignedSongUrl,
+} from "~/server/blob";
 
 export const albumInclude = {
   artist: true,
-  songs: {
-    include: {
-      artist: true,
-      album: true,
-    },
-    orderBy: {
-      title: "asc",
-    },
-  },
+  songs: true,
 } satisfies Prisma.AlbumInclude;
 
-// Define the album type with included relations
-type AlbumWithRelations = Prisma.AlbumGetPayload<{
+export type AlbumWithoutPresignedUrls = Prisma.AlbumGetPayload<{
   include: typeof albumInclude;
 }>;
 
-// Define type for song with presigned URL
-type SongWithPresignedUrl = AlbumWithRelations["songs"][number] & {
-  url: string;
-};
-
-// Define return type with presigned URLs
-type AlbumWithPresignedUrls = Omit<AlbumWithRelations, "songs"> & {
-  songs: SongWithPresignedUrl[];
-  imageUrl: string;
-};
-
-// Helper function to add presigned URLs to songs in an album
-const addPresignedUrlsToAlbum = async (
-  album: AlbumWithRelations,
-): Promise<AlbumWithPresignedUrls> => {
-  const songsWithUrls = await Promise.all(
-    album.songs.map(async (song) => ({
-      ...song,
-      url: await getPresignedSongUrl(song.id),
-    })),
-  );
-
+export async function albumWithPresignedUrls(album: AlbumWithoutPresignedUrls) {
   return {
     ...album,
     imageUrl: await getPresignedAlbumImageUrl(album.id),
-    songs: songsWithUrls,
+    artist: {
+      ...album.artist,
+      imageUrl: await getPresignedArtistImageUrl(album.artist.id),
+    },
+    songs: await Promise.all(
+      album.songs.map(async (song) => ({
+        ...song,
+        url: await getPresignedSongUrl(song.id),
+        imageUrl: await getPresignedAlbumImageUrl(song.albumId),
+      })),
+    ),
   };
-};
+}
 
-// Helper to add presigned URLs to multiple albums
-const addPresignedUrlsToAlbums = async (
-  albums: AlbumWithRelations[],
-): Promise<AlbumWithPresignedUrls[]> => {
-  return Promise.all(albums.map(addPresignedUrlsToAlbum));
-};
+export async function albumsWithPresignedUrls(
+  albums: AlbumWithoutPresignedUrls[],
+) {
+  return Promise.all(albums.map((album) => albumWithPresignedUrls(album)));
+}
+
+export type Album = Awaited<ReturnType<typeof albumWithPresignedUrls>>;
 
 export const albumRouter = createTRPCRouter({
   getFeatured: publicProcedure.query(async ({ ctx }) => {
@@ -64,7 +49,7 @@ export const albumRouter = createTRPCRouter({
       take: 20,
     });
 
-    return await addPresignedUrlsToAlbums(albums);
+    return await albumsWithPresignedUrls(albums);
   }),
 
   getAll: publicProcedure
@@ -101,7 +86,7 @@ export const albumRouter = createTRPCRouter({
       }
 
       return {
-        items: await addPresignedUrlsToAlbums(albums),
+        items: await albumsWithPresignedUrls(albums),
         nextCursor,
       };
     }),
@@ -116,7 +101,7 @@ export const albumRouter = createTRPCRouter({
         include: albumInclude,
       });
 
-      return await addPresignedUrlsToAlbum(album);
+      return await albumWithPresignedUrls(album);
     }),
 
   getByArtistId: publicProcedure
@@ -132,6 +117,6 @@ export const albumRouter = createTRPCRouter({
         },
       });
 
-      return await addPresignedUrlsToAlbums(albums);
+      return await albumsWithPresignedUrls(albums);
     }),
 });

@@ -5,21 +5,12 @@ import { useState, useRef, useEffect } from "react";
 import { Search } from "lucide-react";
 import { api } from "~/trpc/react";
 import Image from "next/image";
-import type { Artist, Album, Song } from "@prisma/client";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/app/_components/ui/popover";
 import { Input } from "~/app/_components/ui/input";
-
-type SearchArtist = Pick<Artist, "id" | "name" | "imageUrl">;
-type SearchAlbum = Pick<Album, "id" | "title" | "imageUrl"> & {
-  artist: Pick<Artist, "name">;
-};
-type SearchSong = Pick<Song, "id" | "title" | "imageUrl"> & {
-  artist: Pick<Artist, "name">;
-};
 
 export function SearchBar() {
   const [open, setOpen] = useState(false);
@@ -89,7 +80,7 @@ export function SearchBar() {
                   Artists
                 </h3>
                 <div className="space-y-1">
-                  {searchResults.data.artists.map((artist: SearchArtist) => (
+                  {searchResults.data.artists.map((artist) => (
                     <div
                       key={artist.id}
                       className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
@@ -117,7 +108,7 @@ export function SearchBar() {
                   Albums
                 </h3>
                 <div className="space-y-1">
-                  {searchResults.data.albums.map((album: SearchAlbum) => (
+                  {searchResults.data.albums.map((album) => (
                     <div
                       key={album.id}
                       className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
@@ -149,7 +140,7 @@ export function SearchBar() {
                 Songs
               </h3>
               <div className="space-y-1">
-                {searchResults.data.songs.map((song: SearchSong) => (
+                {searchResults.data.songs.map((song) => (
                   <div
                     key={song.id}
                     className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"

@@ -6,48 +6,25 @@ import Link from "next/link";
 import { Button } from "~/app/_components/ui/button";
 import { usePlayerStore } from "~/lib/store/usePlayerStore";
 import { cn, formatDuration } from "~/lib/utils";
-import { type RouterOutputs } from "~/trpc/react";
 import { SongDropdown } from "./song-dropdown";
 import { Skeleton } from "./ui/skeleton";
-
-type SongListProps =
-  | {
-      playlistId: string;
-      albumSongs?: never;
-      playlistSongs: NonNullable<RouterOutputs["playlist"]["getById"]>["songs"];
-      isLoading: boolean;
-      lengthHint?: number;
-    }
-  | {
-      playlistId?: never;
-      albumSongs: RouterOutputs["song"]["getById"][];
-      playlistSongs?: never;
-      isLoading: boolean;
-      lengthHint?: number;
-    };
+import { type Song } from "~/server/api/routers/song";
 
 export function SongList({
   playlistId,
-  playlistSongs,
-  albumSongs,
+  songs,
   isLoading = false,
   lengthHint = 10,
-}: SongListProps) {
+}: {
+  playlistId?: string;
+  songs: Song[];
+  isLoading?: boolean;
+  lengthHint?: number;
+}) {
   const { playSong, currentSong, isPlaying, togglePlayPause } =
     usePlayerStore();
 
-  const songs =
-    playlistId !== undefined
-      ? playlistSongs.map((playlistSong) => ({
-          key: playlistSong.id,
-          ...playlistSong.song,
-        }))
-      : albumSongs.map((albumSong) => ({
-          key: albumSong.id,
-          ...albumSong,
-        }));
-
-  const handlePlay = (song: RouterOutputs["song"]["getById"]) => {
+  const handlePlay = (song: Song) => {
     if (currentSong?.id === song.id) {
       void togglePlayPause();
       return;
@@ -90,7 +67,7 @@ export function SongList({
 
               return (
                 <div
-                  key={song.key}
+                  key={song.id}
                   className={cn(
                     "group grid grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3",
                     isCurrentSong ? "bg-secondary/60" : "hover:bg-secondary/40",

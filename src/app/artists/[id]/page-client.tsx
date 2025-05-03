@@ -58,7 +58,7 @@ export default function ArtistDetailPage({ artist }: ArtistDetailPageProps) {
       <div className="mt-8">
         <h2 className="mb-4 text-2xl font-bold">Popular Songs</h2>
         <SongList
-          albumSongs={popularSongs ?? []}
+          songs={popularSongs ?? []}
           isLoading={isLoadingPopularSongs}
         />
 

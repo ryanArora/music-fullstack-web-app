@@ -101,7 +101,23 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
         {album.songs.length === 0 ? (
           <p className="text-muted-foreground">No songs in this album yet.</p>
         ) : (
-          <SongList albumSongs={album.songs} isLoading={false} />
+          <SongList
+            songs={album.songs.map((song) => ({
+              ...song,
+              artist: album.artist,
+              album: {
+                id: album.id,
+                artistId: album.artistId,
+                title: album.title,
+                imageUrl: album.imageUrl,
+                releaseDate: album.releaseDate,
+                createdAt: album.createdAt,
+                updatedAt: album.updatedAt,
+                type: album.type,
+              },
+            }))}
+            isLoading={false}
+          />
         )}
       </div>
 

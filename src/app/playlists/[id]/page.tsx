@@ -97,7 +97,7 @@ export default async function PlaylistPage({ params }: PageProps) {
           </div>
         ) : (
           <SongList
-            playlistSongs={playlist.songs}
+            songs={songs}
             playlistId={(await params).id}
             isLoading={false}
           />

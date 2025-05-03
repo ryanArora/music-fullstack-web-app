@@ -1,7 +1,50 @@
 import { z } from "zod";
-
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { getPresignedSongUrl } from "~/server/blob";
+import {
+  getPresignedAlbumImageUrl,
+  getPresignedArtistImageUrl,
+  getPresignedSongUrl,
+} from "~/server/blob";
+import { type Prisma } from "@prisma/client";
+
+export const songInclude = {
+  album: true,
+  artist: true,
+} satisfies Prisma.SongInclude;
+
+export type SongWithoutPresignedUrls = Prisma.SongGetPayload<{
+  include: typeof songInclude;
+}>;
+
+export async function songWithPresignedUrls(song: SongWithoutPresignedUrls) {
+  const [url, albumImageUrl, artistImageUrl] = await Promise.all([
+    getPresignedSongUrl(song.id),
+    getPresignedAlbumImageUrl(song.album.id),
+    getPresignedArtistImageUrl(song.artist.id),
+  ]);
+
+  return {
+    ...song,
+    url,
+    imageUrl: albumImageUrl,
+    album: {
+      ...song.album,
+      imageUrl: albumImageUrl,
+    },
+    artist: {
+      ...song.artist,
+      imageUrl: artistImageUrl,
+    },
+  };
+}
+
+export async function songsWithPresignedUrls(
+  songs: SongWithoutPresignedUrls[],
+) {
+  return await Promise.all(songs.map((song) => songWithPresignedUrls(song)));
+}
+
+export type Song = Awaited<ReturnType<typeof songWithPresignedUrls>>;
 
 export const songRouter = createTRPCRouter({
   getAll: publicProcedure
@@ -42,18 +85,8 @@ export const songRouter = createTRPCRouter({
         nextCursor = nextItem?.id;
       }
 
-      // Add presigned URLs to each song
-      const songsWithUrls = await Promise.all(
-        songs.map(async (song) => {
-          return {
-            ...song,
-            url: await getPresignedSongUrl(song.id),
-          };
-        }),
-      );
-
       return {
-        items: songsWithUrls,
+        items: await songsWithPresignedUrls(songs),
         nextCursor,
       };
     }),
@@ -71,10 +104,7 @@ export const songRouter = createTRPCRouter({
         },
       });
 
-      return {
-        ...song,
-        url: await getPresignedSongUrl(song.id),
-      };
+      return await songWithPresignedUrls(song);
     }),
 
   getByArtistId: publicProcedure
@@ -93,12 +123,7 @@ export const songRouter = createTRPCRouter({
         },
       });
 
-      return Promise.all(
-        songs.map(async (song) => ({
-          ...song,
-          url: await getPresignedSongUrl(song.id),
-        })),
-      );
+      return await songsWithPresignedUrls(songs);
     }),
 
   getByAlbumId: publicProcedure
@@ -117,11 +142,6 @@ export const songRouter = createTRPCRouter({
         },
       });
 
-      return Promise.all(
-        songs.map(async (song) => ({
-          ...song,
-          url: await getPresignedSongUrl(song.id),
-        })),
-      );
+      return await songsWithPresignedUrls(songs);
     }),
 });

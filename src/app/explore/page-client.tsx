@@ -55,7 +55,7 @@ export default function ExplorePage() {
       <section className="mb-10">
         <h2 className="mb-4 text-2xl font-bold">Featured Songs</h2>
         <div className="space-y-2">
-          <SongList albumSongs={songs} isLoading={isLoadingSongs} />
+          <SongList songs={songs} isLoading={isLoadingSongs} />
         </div>
       </section>
 

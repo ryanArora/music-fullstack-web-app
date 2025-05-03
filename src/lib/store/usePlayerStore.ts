@@ -1,17 +1,15 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { type RouterOutputs } from "~/trpc/react";
+import { type Song } from "~/server/api/routers/song";
+import { type Album } from "~/server/api/routers/album";
+import { type Playlist } from "~/server/api/routers/playlist";
 
 // Define repeat mode enum
 export type RepeatMode = "off" | "all" | "one";
 
-export type SongWithDetails = RouterOutputs["song"]["getById"] & {
-  url: string;
-};
-
 interface PlayerState {
   // Current state
-  currentSong: SongWithDetails | null;
+  currentSong: Song | null;
   isPlaying: boolean;
   volume: number;
   muted: boolean;
@@ -19,9 +17,9 @@ interface PlayerState {
   duration: number;
 
   // Queue management
-  queue: SongWithDetails[];
+  queue: Song[];
   queueIndex: number;
-  originalQueue: SongWithDetails[]; // Original queue order for shuffle functionality
+  originalQueue: Song[]; // Original queue order for shuffle functionality
 
   // Player settings
   repeatMode: RepeatMode;
@@ -31,11 +29,9 @@ interface PlayerState {
   audioElement: HTMLAudioElement | null;
 
   // Methods
-  playSong: (song: SongWithDetails, songs?: SongWithDetails[]) => void;
-  playAlbum: (album: RouterOutputs["album"]["getById"]) => void;
-  playPlaylist: (
-    playlist: NonNullable<RouterOutputs["playlist"]["getById"]>,
-  ) => void;
+  playSong: (song: Song, songs?: Song[]) => void;
+  playAlbum: (album: Album) => void;
+  playPlaylist: (playlist: Playlist) => void;
   togglePlayPause: () => Promise<void>;
   setVolume: (volume: number) => void;
   toggleMute: () => void;
@@ -45,8 +41,8 @@ interface PlayerState {
 
   // Queue management methods
   clearQueue: () => void;
-  playNext: (song: SongWithDetails) => void;
-  addToQueue: (song: SongWithDetails) => void;
+  playNext: (song: Song) => void;
+  addToQueue: (song: Song) => void;
   removeFromQueue: (index: number) => void;
   jumpToQueueItem: (index: number) => void;
 
@@ -204,7 +200,18 @@ export const usePlayerStore = create<PlayerState>()(
           if (album.songs.length === 0) return;
 
           const firstSong = album.songs[0]!;
-          get().playSong(firstSong, album.songs);
+          get().playSong(
+            {
+              ...firstSong,
+              album: album,
+              artist: album.artist,
+            },
+            album.songs.map((song) => ({
+              ...song,
+              album: album,
+              artist: album.artist,
+            })),
+          );
         },
 
         // Play all songs from a playlist
@@ -524,7 +531,7 @@ export const usePlayerStore = create<PlayerState>()(
             }
 
             // Reconstruct the queue with current song at the beginning
-            let shuffledQueue: SongWithDetails[] = [];
+            let shuffledQueue: Song[] = [];
             if (
               currentSongId &&
               queueIndex !== -1 &&
@@ -534,19 +541,19 @@ export const usePlayerStore = create<PlayerState>()(
               if (currentQueueSong) {
                 // Filter out any undefined values from remainingSongs
                 const filteredRemainingSongs = remainingSongs.filter(
-                  (song): song is SongWithDetails => song !== undefined,
+                  (song): song is Song => song !== undefined,
                 );
                 shuffledQueue = [currentQueueSong, ...filteredRemainingSongs];
               } else {
                 // Filter out any undefined values from remainingSongs
                 shuffledQueue = remainingSongs.filter(
-                  (song): song is SongWithDetails => song !== undefined,
+                  (song): song is Song => song !== undefined,
                 );
               }
             } else {
               // Filter out any undefined values from remainingSongs
               shuffledQueue = remainingSongs.filter(
-                (song): song is SongWithDetails => song !== undefined,
+                (song): song is Song => song !== undefined,
               );
             }
 

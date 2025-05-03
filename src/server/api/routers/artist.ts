@@ -1,31 +1,61 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { albumInclude } from "./album";
+import { albumInclude, albumsWithPresignedUrls } from "./album";
+import { type Prisma } from "@prisma/client";
+import { songsWithPresignedUrls } from "./song";
 import {
   getPresignedAlbumImageUrl,
   getPresignedArtistImageUrl,
   getPresignedSongUrl,
 } from "~/server/blob";
-import { Artist } from "@prisma/client";
 
-async function artistWithPresignedImage(artist: Artist) {
+export const artistInclude = {
+  albums: true,
+  songs: true,
+} satisfies Prisma.ArtistInclude;
+
+type ArtistWithoutPresignedUrls = Prisma.ArtistGetPayload<{
+  include: typeof artistInclude;
+}>;
+
+async function artistWithPresignedUrls(artist: ArtistWithoutPresignedUrls) {
   return {
     ...artist,
     imageUrl: await getPresignedArtistImageUrl(artist.id),
+    albums: await Promise.all(
+      artist.albums.map(async (album) => ({
+        ...album,
+        imageUrl: await getPresignedAlbumImageUrl(album.id),
+      })),
+    ),
+    songs: await Promise.all(
+      artist.songs.map(async (song) => ({
+        ...song,
+        url: await getPresignedSongUrl(song.id),
+        imageUrl: await getPresignedAlbumImageUrl(song.albumId),
+      })),
+    ),
   };
 }
 
-async function artistsWithPresignedImages(artists: Artist[]) {
-  return await Promise.all(artists.map(artistWithPresignedImage));
+export async function artistsWithPresignedUrls(
+  artists: ArtistWithoutPresignedUrls[],
+) {
+  return await Promise.all(
+    artists.map((artist) => artistWithPresignedUrls(artist)),
+  );
 }
+
+export type Artist = Awaited<ReturnType<typeof artistWithPresignedUrls>>;
 
 export const artistRouter = createTRPCRouter({
   getFeatured: publicProcedure.query(async ({ ctx }) => {
     const artists = await ctx.db.artist.findMany({
       take: 20,
+      include: artistInclude,
     });
 
-    return await artistsWithPresignedImages(artists);
+    return await artistsWithPresignedUrls(artists);
   }),
 
   getAll: publicProcedure
@@ -52,6 +82,7 @@ export const artistRouter = createTRPCRouter({
               skip: 1, // Skip the cursor
             }
           : {}),
+        include: artistInclude,
       });
 
       let nextCursor: typeof cursor | undefined = undefined;
@@ -61,7 +92,7 @@ export const artistRouter = createTRPCRouter({
       }
 
       return {
-        items: await artistsWithPresignedImages(artists),
+        items: await artistsWithPresignedUrls(artists),
         nextCursor,
       };
     }),
@@ -73,55 +104,10 @@ export const artistRouter = createTRPCRouter({
         where: {
           id: input.id,
         },
-        include: {
-          albums: {
-            orderBy: {
-              releaseDate: "desc",
-            },
-            include: {
-              songs: true,
-            },
-          },
-          songs: {
-            orderBy: {
-              releaseDate: "desc",
-            },
-            include: {
-              album: true,
-            },
-            take: 10, // Get only top 10 songs
-          },
-        },
+        include: artistInclude,
       });
 
-      const songsWithUrls = await Promise.all(
-        artist.songs.map(async (song) => ({
-          ...song,
-          url: await getPresignedSongUrl(song.id),
-        })),
-      );
-
-      // Add presigned URLs to songs in albums
-      const albumsWithSongUrls = await Promise.all(
-        artist.albums.map(async (album) => {
-          return {
-            ...album,
-            songs: await Promise.all(
-              album.songs.map(async (song) => ({
-                ...song,
-                url: await getPresignedSongUrl(song.id),
-              })),
-            ),
-          };
-        }),
-      );
-
-      return {
-        ...artist,
-        imageUrl: await getPresignedArtistImageUrl(artist.id),
-        songs: songsWithUrls,
-        albums: albumsWithSongUrls,
-      };
+      return await artistWithPresignedUrls(artist);
     }),
 
   getPopularSongs: publicProcedure
@@ -141,12 +127,7 @@ export const artistRouter = createTRPCRouter({
         take: 5, // Get top 5 songs for now
       });
 
-      return await Promise.all(
-        songs.map(async (song) => ({
-          ...song,
-          url: await getPresignedSongUrl(song.id),
-        })),
-      );
+      return await songsWithPresignedUrls(songs);
     }),
 
   getAlbumsByType: publicProcedure
@@ -168,20 +149,6 @@ export const artistRouter = createTRPCRouter({
         include: albumInclude,
       });
 
-      // Add presigned URLs to songs in each album
-      return Promise.all(
-        albums.map(async (album) => {
-          return {
-            ...album,
-            imageUrl: await getPresignedAlbumImageUrl(album.id),
-            songs: await Promise.all(
-              album.songs.map(async (song) => ({
-                ...song,
-                url: await getPresignedSongUrl(song.id),
-              })),
-            ),
-          };
-        }),
-      );
+      return await albumsWithPresignedUrls(albums);
     }),
 });

@@ -17,10 +17,10 @@ export async function getPresignedSongUrl(songId: string) {
   );
 }
 
-export async function getPresignedAlbumImageUrl(imageId: string) {
+export async function getPresignedAlbumImageUrl(albumId: string) {
   return await blob.presignedGetObject(
     env.MINIO_BUCKET_NAME_ALBUM_IMAGES,
-    `${imageId}.webp`,
+    `${albumId}.webp`,
     24 * 60 * 60,
   );
 }
