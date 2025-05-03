@@ -1,7 +1,23 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { albumInclude } from "./album";
-import { getPresignedSongUrl } from "~/server/blob";
+import {
+  getPresignedAlbumImageUrl,
+  getPresignedArtistImageUrl,
+  getPresignedSongUrl,
+} from "~/server/blob";
+import { Artist } from "@prisma/client";
+
+async function artistWithPresignedImage(artist: Artist) {
+  return {
+    ...artist,
+    imageUrl: await getPresignedArtistImageUrl(artist.id),
+  };
+}
+
+async function artistsWithPresignedImages(artists: Artist[]) {
+  return await Promise.all(artists.map(artistWithPresignedImage));
+}
 
 export const artistRouter = createTRPCRouter({
   getFeatured: publicProcedure.query(async ({ ctx }) => {
@@ -9,7 +25,7 @@ export const artistRouter = createTRPCRouter({
       take: 20,
     });
 
-    return artists;
+    return await artistsWithPresignedImages(artists);
   }),
 
   getAll: publicProcedure
@@ -45,7 +61,7 @@ export const artistRouter = createTRPCRouter({
       }
 
       return {
-        items: artists,
+        items: await artistsWithPresignedImages(artists),
         nextCursor,
       };
     }),
@@ -102,6 +118,7 @@ export const artistRouter = createTRPCRouter({
 
       return {
         ...artist,
+        imageUrl: await getPresignedArtistImageUrl(artist.id),
         songs: songsWithUrls,
         albums: albumsWithSongUrls,
       };
@@ -156,6 +173,7 @@ export const artistRouter = createTRPCRouter({
         albums.map(async (album) => {
           return {
             ...album,
+            imageUrl: await getPresignedAlbumImageUrl(album.id),
             songs: await Promise.all(
               album.songs.map(async (song) => ({
                 ...song,

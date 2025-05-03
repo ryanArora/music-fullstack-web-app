@@ -7,6 +7,7 @@ import * as path from "path";
 import * as os from "os";
 import { blob } from "~/server/blob";
 import { env } from "~/env";
+import sharp from "sharp";
 
 const prisma = new PrismaClient();
 const YOUTUBE_MUSIC_BASE_URL = "https://music.youtube.com";
@@ -299,6 +300,23 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
   return result;
 }
 
+async function uploadImage(id: string, url: string, bucket: string) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`Failed to fetch image: ${url}`);
+      return null;
+    }
+
+    const imageBuffer = await response.arrayBuffer();
+    const webpBuffer = await sharp(Buffer.from(imageBuffer)).webp().toBuffer();
+    await blob.putObject(bucket, `${id}.webp`, webpBuffer);
+    console.log(`Uploaded ${url} to blob in bucket ${bucket} as ${id}.webp`);
+  } catch (error) {
+    console.error("Error converting image to webp:", error);
+  }
+}
+
 async function saveArtistToDatabase(artistData: {
   name: string;
   description: string | null;
@@ -322,18 +340,22 @@ async function saveArtistToDatabase(artistData: {
   const artist = await prisma.artist.create({
     data: {
       name: artistData.name,
-      imageUrl: artistData.imageUrl,
     },
   });
 
   console.log(`Created artist: ${artist.name} (${artist.id})`);
+
+  await uploadImage(
+    artist.id,
+    artistData.imageUrl,
+    env.MINIO_BUCKET_NAME_ARTIST_IMAGES,
+  );
 
   // Create albums and songs
   for (const albumData of artistData.albums) {
     const album = await prisma.album.create({
       data: {
         title: albumData.title,
-        imageUrl: albumData.imageUrl,
         artistId: artist.id,
         releaseDate: new Date(),
         type: albumData.albumType,
@@ -341,6 +363,12 @@ async function saveArtistToDatabase(artistData: {
     });
 
     console.log(`Created album: ${album.title} (${album.id})`);
+
+    await uploadImage(
+      album.id,
+      albumData.imageUrl,
+      env.MINIO_BUCKET_NAME_ALBUM_IMAGES,
+    );
 
     // Create songs for this album
     for (const songData of albumData.songs) {
@@ -350,7 +378,6 @@ async function saveArtistToDatabase(artistData: {
           data: {
             title: songData.title,
             duration: songData.duration, // Default duration in seconds
-            imageUrl: albumData.imageUrl,
             artistId: artist.id,
             albumId: album.id,
             genre: "Unknown", // Default genre
@@ -476,10 +503,10 @@ async function main() {
       imageUrl: artistInfo.imageUrl,
       albums: albums.map((album) => ({
         title: album.title,
-        imageUrl: album.imageUrl,
         description: album.description,
         albumType: album.albumType,
         songs: album.songs,
+        imageUrl: album.imageUrl,
       })),
     });
   } catch (error) {

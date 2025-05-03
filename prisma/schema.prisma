@@ -10,7 +10,6 @@ datasource db {
 model Artist {
     id        String   @id @default(cuid())
     name      String
-    imageUrl  String
     songs     Song[]
     albums    Album[]
     createdAt DateTime @default(now())
@@ -23,7 +22,6 @@ model Song {
     id          String         @id @default(cuid())
     title       String
     duration    Int // in seconds
-    imageUrl    String
     artistId    String
     artist      Artist         @relation(fields: [artistId], references: [id], onDelete: Cascade)
     albumId     String
@@ -42,7 +40,6 @@ model Song {
 model Album {
     id          String    @id @default(cuid())
     title       String
-    imageUrl    String
     artistId    String
     artist      Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
     songs       Song[]
@@ -64,7 +61,6 @@ enum AlbumType {
 model Playlist {
     id        String         @id @default(cuid())
     title     String
-    imageUrl  String?
     songs     PlaylistSong[]
     isPublic  Boolean        @default(true)
     isLiked   Boolean        @default(false)

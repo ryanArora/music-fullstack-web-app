@@ -29,6 +29,9 @@ export const env = createEnv({
     MINIO_USER: z.string().min(1),
     MINIO_PASSWORD: z.string().min(1),
     MINIO_BUCKET_NAME_MUSIC: z.string().min(1),
+    MINIO_BUCKET_NAME_ALBUM_IMAGES: z.string().min(1),
+    MINIO_BUCKET_NAME_ARTIST_IMAGES: z.string().min(1),
+    MINIO_BUCKET_NAME_PLAYLIST_IMAGES: z.string().min(1),
     NEXTAUTH_SECRET: z.string().min(1),
     NEXTAUTH_URL: z.string().min(1).url(),
     DISCORD_CLIENT_ID: z.string().min(1),
@@ -47,6 +50,11 @@ export const env = createEnv({
     MINIO_PORT: process.env.MINIO_PORT,
     MINIO_USE_SSL: process.env.MINIO_USE_SSL,
     MINIO_BUCKET_NAME_MUSIC: process.env.MINIO_BUCKET_NAME_MUSIC,
+    MINIO_BUCKET_NAME_ALBUM_IMAGES: process.env.MINIO_BUCKET_NAME_ALBUM_IMAGES,
+    MINIO_BUCKET_NAME_ARTIST_IMAGES:
+      process.env.MINIO_BUCKET_NAME_ARTIST_IMAGES,
+    MINIO_BUCKET_NAME_PLAYLIST_IMAGES:
+      process.env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,

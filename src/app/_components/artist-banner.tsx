@@ -4,7 +4,7 @@ import Image from "next/image";
 import { type Artist } from "@prisma/client";
 
 interface ArtistBannerProps {
-  artist: Artist;
+  artist: Artist & { imageUrl: string };
   description?: string;
 }
 

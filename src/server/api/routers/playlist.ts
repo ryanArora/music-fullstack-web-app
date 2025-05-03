@@ -7,7 +7,13 @@ import {
   publicProcedure,
   protectedProcedure,
 } from "~/server/api/trpc";
-import { getPresignedSongUrl } from "~/server/blob";
+import {
+  getPresignedPlaylistImageUrl,
+  getPresignedSongUrl,
+  blob,
+} from "~/server/blob";
+import { env } from "~/env";
+import { stat } from "fs";
 
 const playlistInclude = {
   songs: {
@@ -48,6 +54,7 @@ const addPresignedUrlsToPlaylist = async (
 
   return {
     ...playlist,
+    imageUrl: await getPresignedPlaylistImageUrl(playlist.id),
     songs: songsWithUrls,
   };
 };
@@ -170,7 +177,6 @@ export const playlistRouter = createTRPCRouter({
         data: {
           title: input.title,
           isPublic: input.isPublic,
-          imageUrl: null, // Will be updated when songs are added
           userId: ctx.session.user.id,
         },
       });
@@ -279,24 +285,45 @@ export const playlistRouter = createTRPCRouter({
       }
 
       // Get the song to use its image if playlist has no image
-      const song = await ctx.db.song.findUniqueOrThrow({
+      const { albumId } = await ctx.db.song.findUniqueOrThrow({
         where: { id: input.songId },
-        select: { imageUrl: true },
+        select: { albumId: true },
       });
+
+      let imageExists = false;
+      try {
+        await blob.statObject(
+          env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES,
+          `${playlist.id}.webp`,
+        );
+        imageExists = true;
+      } catch (error) {
+        imageExists = false;
+      }
+
+      // Update playlist image if it doesn't have one
+      if (!imageExists) {
+        try {
+          const albumImage = await blob.getObject(
+            env.MINIO_BUCKET_NAME_ALBUM_IMAGES,
+            `${albumId}.webp`,
+          );
+
+          await blob.putObject(
+            env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES,
+            `${playlist.id}.webp`,
+            albumImage,
+          );
+        } catch (error) {
+          console.error(error);
+        }
+      }
 
       // Get the highest order value
       const highestOrder =
         playlist.songs.length > 0
           ? Math.max(...playlist.songs.map((song) => song.order))
           : -1;
-
-      // Update playlist image if it doesn't have one
-      if (!playlist.imageUrl) {
-        await ctx.db.playlist.update({
-          where: { id: input.playlistId },
-          data: { imageUrl: song.imageUrl },
-        });
-      }
 
       // Add song to playlist
       return ctx.db.playlistSong.create({
@@ -391,17 +418,40 @@ export const playlistRouter = createTRPCRouter({
         return { liked: false };
       } else {
         // Like - add to playlist
-        const song = await ctx.db.song.findUniqueOrThrow({
+
+        // Get the song to use its image if playlist has no image
+        const { albumId } = await ctx.db.song.findUniqueOrThrow({
           where: { id: input.songId },
-          select: { imageUrl: true },
+          select: { albumId: true },
         });
 
+        let imageExists = false;
+        try {
+          await blob.statObject(
+            env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES,
+            `${likedPlaylist.id}.webp`,
+          );
+          imageExists = true;
+        } catch (error) {
+          imageExists = false;
+        }
+
         // Update playlist image if it doesn't have one
-        if (!likedPlaylist.imageUrl) {
-          await ctx.db.playlist.update({
-            where: { id: likedPlaylist.id },
-            data: { imageUrl: song.imageUrl },
-          });
+        if (!imageExists) {
+          try {
+            const albumImage = await blob.getObject(
+              env.MINIO_BUCKET_NAME_ALBUM_IMAGES,
+              `${albumId}.webp`,
+            );
+
+            await blob.putObject(
+              env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES,
+              `${likedPlaylist.id}.webp`,
+              albumImage,
+            );
+          } catch (error) {
+            console.error(error);
+          }
         }
 
         // Get highest order

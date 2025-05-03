@@ -16,7 +16,7 @@ type ArtistCardProps = {
   | {
       loading: false;
       error: false;
-      artist: Artist;
+      artist: Artist & { imageUrl: string };
     }
   | {
       loading: false;

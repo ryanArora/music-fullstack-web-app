@@ -40,6 +40,9 @@ async function main() {
   await clearDatabase();
   await clearBlob();
   await blob.makeBucket(env.MINIO_BUCKET_NAME_MUSIC);
+  await blob.makeBucket(env.MINIO_BUCKET_NAME_ALBUM_IMAGES);
+  await blob.makeBucket(env.MINIO_BUCKET_NAME_ARTIST_IMAGES);
+  await blob.makeBucket(env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES);
 }
 
 main()

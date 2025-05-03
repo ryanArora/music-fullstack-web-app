@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { type Prisma } from "@prisma/client";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { getPresignedSongUrl } from "~/server/blob";
+import { getPresignedAlbumImageUrl, getPresignedSongUrl } from "~/server/blob";
 
 export const albumInclude = {
   artist: true,
@@ -29,6 +29,7 @@ type SongWithPresignedUrl = AlbumWithRelations["songs"][number] & {
 // Define return type with presigned URLs
 type AlbumWithPresignedUrls = Omit<AlbumWithRelations, "songs"> & {
   songs: SongWithPresignedUrl[];
+  imageUrl: string;
 };
 
 // Helper function to add presigned URLs to songs in an album
@@ -44,6 +45,7 @@ const addPresignedUrlsToAlbum = async (
 
   return {
     ...album,
+    imageUrl: await getPresignedAlbumImageUrl(album.id),
     songs: songsWithUrls,
   };
 };

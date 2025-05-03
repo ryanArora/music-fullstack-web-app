@@ -17,7 +17,7 @@ type ArtistCarouselProps = {
 } & {
   artists:
     | {
-        items: Artist[];
+        items: (Artist & { imageUrl: string })[];
         loading: false;
         error: false;
       }
