@@ -9,6 +9,7 @@ const portSchema = z.coerce.number().int().min(1024).max(65535);
 
 export const env = createEnv({
   server: {
+    PORT: portSchema,
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -25,10 +26,11 @@ export const env = createEnv({
     MINIO_BUCKET_NAME_ALBUM_IMAGES: z.string(),
     MINIO_BUCKET_NAME_ARTIST_IMAGES: z.string(),
     MINIO_BUCKET_NAME_PLAYLIST_IMAGES: z.string(),
-    NEXTAUTH_SECRET: z.string(),
-    NEXTAUTH_URL: z.string().url(),
-    DISCORD_CLIENT_ID: z.string(),
-    DISCORD_CLIENT_SECRET: z.string(),
+    AUTH_SECRET: z.string(),
+    AUTH_URL: z.string().url(),
+    AUTH_TRUST_HOST: booleanSchema,
+    AUTH_DISCORD_ID: z.string(),
+    AUTH_DISCORD_SECRET: z.string(),
   },
   client: {
     NEXT_PUBLIC_IS_STAGING: booleanSchema,
