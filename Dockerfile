@@ -63,4 +63,4 @@ ENV SUNOAPI_API_KEY=${SUNOAPI_API_KEY}
 RUN pnpm build
 
 EXPOSE 3000
-CMD ["sh", "-c", "./scripts/healthcheck.sh && pnpm db:deploy && pnpm start"]
+CMD ["sh", "-c", "./scripts/healthcheck.sh && pnpm db:migrate && pnpm start"]
