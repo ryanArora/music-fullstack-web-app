@@ -9,6 +9,7 @@ const portSchema = z.coerce.number().int().min(1024).max(65535);
 
 export const env = createEnv({
   server: {
+    HOSTNAME: z.string(),
     PORT: portSchema,
     NODE_ENV: z
       .enum(["development", "test", "production"])

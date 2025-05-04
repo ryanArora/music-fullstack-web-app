@@ -10,6 +10,7 @@ MINIO_PASSWORD=$(openssl rand -hex 32)
 NEXTAUTH_SECRET=$(openssl rand -hex 32)
 
 cat << EOF
+HOSTNAME=0.0.0.0
 PORT=8080
 POSTGRES_URL=postgres://postgres:$POSTGRES_PASSWORD@localhost:5432/postgres
 POSTGRES_USER=postgres
