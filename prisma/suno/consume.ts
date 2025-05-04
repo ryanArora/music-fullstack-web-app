@@ -11,7 +11,7 @@ async function checkPendingTaskStatuses() {
     tasks = z
       .array(taskSchema)
       .parse(JSON.parse(await readFile("./tasks.json", "utf-8")) as unknown);
-  } catch (error) {
+  } catch (_error) {
     tasks = [];
   }
 
@@ -77,7 +77,7 @@ async function checkPendingTaskStatuses() {
       tasks = z
         .array(taskSchema)
         .parse(JSON.parse(await readFile("./tasks.json", "utf-8")) as unknown);
-    } catch (error) {
+    } catch (_error) {
       tasks = [];
     }
     tasks = tasks.filter((t) => t.id !== task.id);

@@ -42,7 +42,7 @@ export async function generateSong({
   }
 
   const taskId = data.data.taskId;
-  await persistTaskId({ taskId, songId: faker.string.uuid() });
+  await persistTaskId({ taskId, songId });
 }
 
 async function persistTaskId({
@@ -57,7 +57,7 @@ async function persistTaskId({
     taskIds = z
       .array(taskSchema)
       .parse(JSON.parse(await readFile("./tasks.json", "utf-8")) as unknown);
-  } catch (error) {
+  } catch (_error) {
     taskIds = [];
   }
   taskIds.push({ id: taskId, songId: songId, state: { state: "pending" } });
@@ -66,7 +66,7 @@ async function persistTaskId({
 }
 
 const song = await db.song.findFirstOrThrow();
-generateSong({
+await generateSong({
   genre: song.genre ?? "Pop",
   songId: song.id,
 });
