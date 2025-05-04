@@ -457,8 +457,12 @@ async function main() {
   console.log(`Scraping data for artist: ${artistName}`);
 
   const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium",
-    headless: false,
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    defaultViewport: {
+      width: 1280,
+      height: 720,
+    },
   });
 
   try {

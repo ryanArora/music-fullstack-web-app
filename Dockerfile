@@ -1,10 +1,13 @@
 FROM ghcr.io/puppeteer/puppeteer:24.8.0
 
+USER root
 RUN apt update && \
     apt upgrade -y && \
     apt install -y openssl postgresql-client curl && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g corepack@latest
+USER pptruser
+
 WORKDIR /app
 
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
