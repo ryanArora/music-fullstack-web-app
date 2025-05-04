@@ -1,8 +1,9 @@
 #!/bin/sh
 set -euo pipefail
 
-read -p "Enter your Discord client ID: " AUTH_DISCORD_ID
-read -p "Enter your Discord client secret: " AUTH_DISCORD_SECRET
+read -p "Enter your AUTH_DISCORD_ID: " AUTH_DISCORD_ID
+read -p "Enter your AUTH_DISCORD_SECRET: " AUTH_DISCORD_SECRET
+read -p "Enter your SUNOAPI_API_KEY: " SUNOAPI_API_KEY
 
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
 MINIO_PASSWORD=$(openssl rand -hex 32)
@@ -29,4 +30,5 @@ AUTH_TRUST_HOST=true
 AUTH_DISCORD_ID=$AUTH_DISCORD_ID
 AUTH_DISCORD_SECRET=$AUTH_DISCORD_SECRET
 NEXT_PUBLIC_IS_STAGING=true
+SUNOAPI_API_KEY=$SUNOAPI_API_KEY
 EOF
