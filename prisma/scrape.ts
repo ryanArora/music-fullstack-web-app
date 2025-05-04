@@ -20,8 +20,9 @@ export async function getArtistUrl(browser: Browser, artistName: string) {
   const page = await browser.newPage();
   await page.setUserAgent(ua);
   await page.goto(`${YOUTUBE_MUSIC_BASE_URL}/search?q=${artistName}`);
+  await page.waitForNavigation({ waitUntil: "domcontentloaded" });
+  await page.mouse.move(300, 400, { steps: 20 }); // smooth slide
 
-  await page.waitForSelector("html");
   console.log("debug:", await page.content());
 
   const selector =
