@@ -1,4 +1,5 @@
-FROM node:22.14.0-slim
+FROM ghcr.io/puppeteer/puppeteer:latest
+
 RUN apt update && \
     apt upgrade -y && \
     apt install -y openssl postgresql-client curl && \
