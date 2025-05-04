@@ -460,8 +460,8 @@ async function main() {
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
     defaultViewport: {
-      width: 1280,
-      height: 720,
+      width: 1080,
+      height: 1024,
     },
   });
 
