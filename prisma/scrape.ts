@@ -13,8 +13,12 @@ const prisma = new PrismaClient();
 const YOUTUBE_MUSIC_BASE_URL = "https://music.youtube.com";
 const YOUTUBE_BASE_URL = "https://www.youtube.com";
 
+const ua =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36";
+
 export async function getArtistUrl(browser: Browser, artistName: string) {
   const page = await browser.newPage();
+  await page.setUserAgent(ua);
   await page.goto(`${YOUTUBE_MUSIC_BASE_URL}/search?q=${artistName}`);
 
   await page.waitForSelector("html");
@@ -43,6 +47,7 @@ export async function getArtistUrl(browser: Browser, artistName: string) {
 
 export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
   const page = await browser.newPage();
+  await page.setUserAgent(ua);
   await page.goto(artistPageUrl);
 
   const selectorName = "h1.style-scope > yt-formatted-string:nth-child(1)";
@@ -100,6 +105,7 @@ export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
 
 async function getAlbumUrls(browser: Browser, albumsUrl: string) {
   const page = await browser.newPage();
+  await page.setUserAgent(ua);
   await page.goto(albumsUrl);
 
   const selector =
@@ -133,6 +139,7 @@ async function getAlbumUrls(browser: Browser, albumsUrl: string) {
 
 async function getAlbumUrlsOther(browser: Browser, artistUrl: string) {
   const page = await browser.newPage();
+  await page.setUserAgent(ua);
   await page.goto(artistUrl);
 
   const selector =
@@ -160,6 +167,7 @@ async function getAlbumUrlsOther(browser: Browser, artistUrl: string) {
 }
 async function getAlbumInfo(browser: Browser, albumUrl: string) {
   const page = await browser.newPage();
+  await page.setUserAgent(ua);
   await page.goto(albumUrl);
 
   const titleSelector = "h1.style-scope > yt-formatted-string:nth-child(1)";
