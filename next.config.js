@@ -8,6 +8,7 @@ import { env } from "./src/env.js";
 const config = {
   devIndicators: false,
   images: {
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       {
         protocol: env.MINIO_USE_SSL ? "https" : "http",
