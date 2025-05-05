@@ -3,7 +3,7 @@ FROM ghcr.io/puppeteer/puppeteer:24.8.0
 USER root
 RUN apt update && \
     apt upgrade -y && \
-    apt install -y openssl postgresql-client curl ffmpeg && \
+    apt install -y openssl postgresql-client curl ffmpeg vim && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g corepack@latest && \
     curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
