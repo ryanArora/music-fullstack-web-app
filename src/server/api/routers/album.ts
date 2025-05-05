@@ -15,22 +15,34 @@ export const albumInclude = {
 export type AlbumWithoutPresignedUrls = Prisma.AlbumGetPayload<{
   include: typeof albumInclude;
 }>;
-
 export async function albumWithPresignedUrls(album: AlbumWithoutPresignedUrls) {
+  const [albumImageUrl, artistImageUrl, songsWithUrls] = await Promise.all([
+    getPresignedAlbumImageUrl(album.id),
+    getPresignedArtistImageUrl(album.artist.id),
+    Promise.all(
+      album.songs.map(async (song) => {
+        const [songUrl, songImageUrl] = await Promise.all([
+          getPresignedSongUrl(song.id),
+          getPresignedAlbumImageUrl(song.albumId),
+        ]);
+
+        return {
+          ...song,
+          url: songUrl,
+          imageUrl: songImageUrl,
+        };
+      }),
+    ),
+  ]);
+
   return {
     ...album,
-    imageUrl: await getPresignedAlbumImageUrl(album.id),
+    imageUrl: albumImageUrl,
     artist: {
       ...album.artist,
-      imageUrl: await getPresignedArtistImageUrl(album.artist.id),
+      imageUrl: artistImageUrl,
     },
-    songs: await Promise.all(
-      album.songs.map(async (song) => ({
-        ...song,
-        url: await getPresignedSongUrl(song.id),
-        imageUrl: await getPresignedAlbumImageUrl(song.albumId),
-      })),
-    ),
+    songs: songsWithUrls,
   };
 }
 
