@@ -12,11 +12,11 @@ USER pptruser
 
 WORKDIR /app
 
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
-COPY prisma ./prisma
+COPY --chown=pptruser:pptruser package.json yarn.lock* package-lock.json* pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
+COPY --chown=pptruser:pptruser prisma ./prisma
 RUN corepack enable pnpm && pnpm install --frozen-lockfile
 
-COPY . .
+COPY --chown=pptruser:pptruser . .
 
 ARG HOSTNAME
 ARG PORT
