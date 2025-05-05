@@ -50,6 +50,8 @@ export async function getArtistInfo(browser: Browser, artistPageUrl: string) {
   const page = await browser.newPage();
   await page.setUserAgent(ua);
   await page.goto(artistPageUrl);
+  await page.mouse.move(300, 400, { steps: 20 }); // smooth slide
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   const selectorName = "h1.style-scope > yt-formatted-string:nth-child(1)";
   let name: string;
@@ -108,6 +110,8 @@ async function getAlbumUrls(browser: Browser, albumsUrl: string) {
   const page = await browser.newPage();
   await page.setUserAgent(ua);
   await page.goto(albumsUrl);
+  await page.mouse.move(300, 400, { steps: 20 }); // smooth slide
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   const selector =
     "#items > ytmusic-two-row-item-renderer > div.details.style-scope.ytmusic-two-row-item-renderer > div > yt-formatted-string > a";
@@ -142,6 +146,8 @@ async function getAlbumUrlsOther(browser: Browser, artistUrl: string) {
   const page = await browser.newPage();
   await page.setUserAgent(ua);
   await page.goto(artistUrl);
+  await page.mouse.move(300, 400, { steps: 20 }); // smooth slide
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   const selector =
     "ytmusic-carousel-shelf-renderer.style-scope:nth-child(2) > div:nth-child(1) > ytmusic-carousel:nth-child(2) > div:nth-child(1) > ul:nth-child(1) > ytmusic-two-row-item-renderer > div:nth-child(4) > div:nth-child(1) > yt-formatted-string:nth-child(2) > a:nth-child(1)";
@@ -170,6 +176,8 @@ async function getAlbumInfo(browser: Browser, albumUrl: string) {
   const page = await browser.newPage();
   await page.setUserAgent(ua);
   await page.goto(albumUrl);
+  await page.mouse.move(300, 400, { steps: 20 }); // smooth slide
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   const titleSelector = "h1.style-scope > yt-formatted-string:nth-child(1)";
   await page.waitForSelector(titleSelector);
