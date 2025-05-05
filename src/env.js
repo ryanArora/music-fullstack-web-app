@@ -5,7 +5,7 @@ const booleanSchema = z
   .enum(["1", "0", "true", "false"])
   .transform((val) => val === "1" || val === "true");
 
-const portSchema = z.coerce.number().int().min(1024).max(65535);
+const portSchema = z.coerce.number().int().min(1).max(65535);
 
 export const env = createEnv({
   server: {
