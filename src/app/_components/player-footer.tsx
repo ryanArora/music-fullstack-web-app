@@ -160,6 +160,7 @@ export function PlayerFooter() {
                 alt={currentSong.title}
                 fill
                 className="object-cover"
+                priority
               />
             </div>
             <div className="flex flex-col">

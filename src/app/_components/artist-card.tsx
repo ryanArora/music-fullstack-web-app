@@ -54,6 +54,7 @@ export function ArtistCard({
             alt={artist.name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
+            priority
           />
         </div>
         <div className="text-center">

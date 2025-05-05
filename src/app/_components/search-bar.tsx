@@ -92,6 +92,7 @@ export function SearchBar() {
                           alt={artist.name}
                           fill
                           className="object-cover"
+                          priority
                         />
                       </div>
                       <span>{artist.name}</span>
@@ -120,6 +121,7 @@ export function SearchBar() {
                           alt={album.title}
                           fill
                           className="object-cover"
+                          priority
                         />
                       </div>
                       <div className="flex flex-col">
@@ -152,6 +154,7 @@ export function SearchBar() {
                         alt={song.title}
                         fill
                         className="object-cover"
+                        priority
                       />
                     </div>
                     <div className="flex flex-col">

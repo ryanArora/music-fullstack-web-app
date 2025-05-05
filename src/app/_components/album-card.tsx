@@ -81,6 +81,7 @@ export function AlbumCard({
           alt={album.title}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
+          priority
         />
         <div
           className={cn(

@@ -54,6 +54,7 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                     alt={currentSong.title}
                     fill
                     className="object-cover"
+                    priority
                   />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -95,6 +96,7 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                         alt={song.title}
                         fill
                         className="object-cover"
+                        priority
                       />
                     </div>
                     <div className="min-w-0 flex-1">
