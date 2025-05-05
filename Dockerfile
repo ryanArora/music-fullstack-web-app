@@ -68,4 +68,4 @@ ENV PROXY_URL=${PROXY_URL}
 RUN pnpm build
 
 EXPOSE 3000
-CMD ["sh", "-c", "./scripts/healthcheck.sh && pnpm db:migrate && pnpm start"]
+CMD ["sh", "-c", "pnpm start"]
