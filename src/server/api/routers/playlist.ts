@@ -51,7 +51,7 @@ export async function playlistWithPresignedUrls(
         ...song,
         song: {
           ...song.song,
-          url: await getPresignedSongUrl(song.id),
+          url: await getPresignedSongUrl(song.song.id),
           imageUrl: await getPresignedAlbumImageUrl(song.song.albumId),
           album: {
             ...song.song.album,
