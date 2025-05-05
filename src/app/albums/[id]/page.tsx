@@ -63,6 +63,8 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
             fill
             className="object-cover"
             priority
+            width={300}
+            height={300}
           />
         </div>
 

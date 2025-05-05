@@ -161,6 +161,8 @@ export function PlayerFooter() {
                 fill
                 className="object-cover"
                 priority
+                width={64}
+                height={64}
               />
             </div>
             <div className="flex flex-col">

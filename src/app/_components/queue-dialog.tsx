@@ -55,6 +55,8 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                     fill
                     className="object-cover"
                     priority
+                    width={64}
+                    height={64}
                   />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -97,6 +99,8 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                         fill
                         className="object-cover"
                         priority
+                        width={64}
+                        height={64}
                       />
                     </div>
                     <div className="min-w-0 flex-1">

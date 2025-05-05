@@ -35,6 +35,8 @@ export function PlaylistImage({
       className="object-cover"
       suppressHydrationWarning
       priority
+      width={64}
+      height={64}
     />
   );
 }

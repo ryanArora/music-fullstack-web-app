@@ -93,6 +93,8 @@ export function SearchBar() {
                           fill
                           className="object-cover"
                           priority
+                          width={64}
+                          height={64}
                         />
                       </div>
                       <span>{artist.name}</span>
@@ -122,6 +124,8 @@ export function SearchBar() {
                           fill
                           className="object-cover"
                           priority
+                          width={64}
+                          height={64}
                         />
                       </div>
                       <div className="flex flex-col">
@@ -155,6 +159,8 @@ export function SearchBar() {
                         fill
                         className="object-cover"
                         priority
+                        width={64}
+                        height={64}
                       />
                     </div>
                     <div className="flex flex-col">

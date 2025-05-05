@@ -55,6 +55,8 @@ export function ArtistCard({
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             priority
+            width={300}
+            height={300}
           />
         </div>
         <div className="text-center">

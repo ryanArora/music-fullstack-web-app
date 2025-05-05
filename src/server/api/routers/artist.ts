@@ -19,22 +19,35 @@ type ArtistWithoutPresignedUrls = Prisma.ArtistGetPayload<{
 }>;
 
 async function artistWithPresignedUrls(artist: ArtistWithoutPresignedUrls) {
-  return {
-    ...artist,
-    imageUrl: await getPresignedArtistImageUrl(artist.id),
-    albums: await Promise.all(
+  const [artistImageUrl, albumsWithUrls, songsWithUrls] = await Promise.all([
+    getPresignedArtistImageUrl(artist.id),
+    Promise.all(
       artist.albums.map(async (album) => ({
         ...album,
         imageUrl: await getPresignedAlbumImageUrl(album.id),
       })),
     ),
-    songs: await Promise.all(
-      artist.songs.map(async (song) => ({
-        ...song,
-        url: await getPresignedSongUrl(song.id),
-        imageUrl: await getPresignedAlbumImageUrl(song.albumId),
-      })),
+    Promise.all(
+      artist.songs.map(async (song) => {
+        const [songUrl, songImageUrl] = await Promise.all([
+          getPresignedSongUrl(song.id),
+          getPresignedAlbumImageUrl(song.albumId),
+        ]);
+
+        return {
+          ...song,
+          url: songUrl,
+          imageUrl: songImageUrl,
+        };
+      }),
     ),
+  ]);
+
+  return {
+    ...artist,
+    imageUrl: artistImageUrl,
+    albums: albumsWithUrls,
+    songs: songsWithUrls,
   };
 }
 
