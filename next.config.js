@@ -10,11 +10,9 @@ const config = {
   images: {
     remotePatterns: [
       {
-        protocol: env.NEXT_PUBLIC_MINIO_URL.startsWith("https://")
-          ? "https"
-          : "http",
-        hostname: new URL(env.NEXT_PUBLIC_MINIO_URL).hostname,
-        port: new URL(env.NEXT_PUBLIC_MINIO_URL).port,
+        protocol: env.MINIO_USE_SSL ? "https" : "http",
+        hostname: env.MINIO_ENDPOINT,
+        port: env.MINIO_PORT.toString(),
       },
     ],
   },

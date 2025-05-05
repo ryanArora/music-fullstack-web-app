@@ -23,8 +23,6 @@ export async function getArtistUrl(browser: Browser, artistName: string) {
   await page.mouse.move(300, 400, { steps: 20 }); // smooth slide
   await new Promise((resolve) => setTimeout(resolve, 500));
 
-  console.log("debug:", await page.content());
-
   const selector =
     "html.inactive-player.no-focus-outline body ytmusic-app ytmusic-app-layout#layout.style-scope.ytmusic-app div#content.style-scope.ytmusic-app ytmusic-search-page#search-page.style-scope.ytmusic-app ytmusic-tabbed-search-results-renderer.style-scope.ytmusic-search-page div.content.style-scope.ytmusic-tabbed-search-results-renderer ytmusic-section-list-renderer.style-scope.ytmusic-tabbed-search-results-renderer div#contents.style-scope.ytmusic-section-list-renderer ytmusic-card-shelf-renderer.style-scope.ytmusic-section-list-renderer div.card-container.style-scope.ytmusic-card-shelf-renderer div.card-content-container.style-scope.ytmusic-card-shelf-renderer div.main-card-container.style-scope.ytmusic-card-shelf-renderer div.main-card-content-container.style-scope.ytmusic-card-shelf-renderer div.details-container.style-scope.ytmusic-card-shelf-renderer div.metadata-container.style-scope.ytmusic-card-shelf-renderer yt-formatted-string.title.style-scope.ytmusic-card-shelf-renderer a.yt-simple-endpoint.style-scope.yt-formatted-string";
 

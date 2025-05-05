@@ -37,11 +37,9 @@ export const env = createEnv({
   },
   client: {
     NEXT_PUBLIC_IS_STAGING: booleanSchema,
-    NEXT_PUBLIC_MINIO_URL: z.string().url(),
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_IS_STAGING: process.env.NEXT_PUBLIC_IS_STAGING,
-    NEXT_PUBLIC_MINIO_URL: process.env.NEXT_PUBLIC_MINIO_URL,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,
