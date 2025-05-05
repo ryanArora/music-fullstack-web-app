@@ -24,14 +24,8 @@ export function PlaylistImage({
 
   return (
     <Image
-      src={
-        playlist.imageUrl ??
-        (theme === "dark"
-          ? "/images/playlist-default-dark.svg"
-          : "/images/playlist-default-light.svg")
-      }
+      src={playlist.imageUrl}
       alt={playlist.title}
-      fill
       className="object-cover"
       suppressHydrationWarning
       priority

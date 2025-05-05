@@ -5,6 +5,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession } from "next-auth";
 import { db } from "~/server/db";
 import { env } from "~/env";
+import { blob } from "./server/blob";
+import { join } from "path";
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
@@ -54,6 +56,26 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     jwt: ({ token, user }) => {
       if (user) token.id = user.id;
       return token;
+    },
+  },
+  events: {
+    createUser: async ({ user }) => {
+      if (!user.id) return;
+
+      const likedPlaylist = await db.playlist.create({
+        data: {
+          title: "Liked Songs",
+          isLiked: true,
+          isPublic: false,
+          userId: user.id,
+        },
+      });
+
+      await blob.fPutObject(
+        env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES,
+        `${likedPlaylist.id}.webp`,
+        join(process.cwd(), "public/images/playlist-default.webp"),
+      );
     },
   },
   session: {

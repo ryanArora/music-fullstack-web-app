@@ -15,6 +15,7 @@ import {
   getPresignedSongUrl,
 } from "~/server/blob";
 import { env } from "~/env";
+import { join } from "node:path";
 
 const playlistInclude = {
   songs: {
@@ -178,13 +179,21 @@ export const playlistRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.playlist.create({
+      const playlist = await ctx.db.playlist.create({
         data: {
           title: input.title,
           isPublic: input.isPublic,
           userId: ctx.session.user.id,
         },
       });
+
+      await blob.fPutObject(
+        env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES,
+        `${playlist.id}.webp`,
+        join(process.cwd(), "public/images/playlist-default.webp"),
+      );
+
+      return playlist;
     }),
 
   updatePlaylist: protectedProcedure
@@ -408,6 +417,12 @@ export const playlistRouter = createTRPCRouter({
             songs: true,
           },
         });
+
+        await blob.fPutObject(
+          env.MINIO_BUCKET_NAME_PLAYLIST_IMAGES,
+          `${likedPlaylist.id}.webp`,
+          join(process.cwd(), "public/images/playlist-default.webp"),
+        );
       }
 
       // Check if song is already liked

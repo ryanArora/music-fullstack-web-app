@@ -158,7 +158,6 @@ export function PlayerFooter() {
               <Image
                 src={currentSong.imageUrl}
                 alt={currentSong.title}
-                fill
                 className="object-cover"
                 priority
                 width={64}

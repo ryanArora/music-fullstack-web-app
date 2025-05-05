@@ -90,7 +90,6 @@ export function SearchBar() {
                         <Image
                           src={artist.imageUrl}
                           alt={artist.name}
-                          fill
                           className="object-cover"
                           priority
                           width={64}
@@ -121,7 +120,6 @@ export function SearchBar() {
                         <Image
                           src={album.imageUrl}
                           alt={album.title}
-                          fill
                           className="object-cover"
                           priority
                           width={64}
@@ -156,7 +154,6 @@ export function SearchBar() {
                       <Image
                         src={song.imageUrl}
                         alt={song.title}
-                        fill
                         className="object-cover"
                         priority
                         width={64}

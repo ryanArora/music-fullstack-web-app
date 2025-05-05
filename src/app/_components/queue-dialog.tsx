@@ -52,7 +52,6 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                   <Image
                     src={currentSong.imageUrl}
                     alt={currentSong.title}
-                    fill
                     className="object-cover"
                     priority
                     width={64}
@@ -96,7 +95,6 @@ export function QueueDialog({ open, onOpenChange }: QueueDialogProps) {
                       <Image
                         src={song.imageUrl}
                         alt={song.title}
-                        fill
                         className="object-cover"
                         priority
                         width={64}

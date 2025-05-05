@@ -79,7 +79,6 @@ export function AlbumCard({
         <Image
           src={album.imageUrl}
           alt={album.title}
-          fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           priority
           width={300}

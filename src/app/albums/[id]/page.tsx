@@ -60,7 +60,6 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
           <Image
             src={album.imageUrl}
             alt={album.title}
-            fill
             className="object-cover"
             priority
             width={300}
