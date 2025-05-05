@@ -23,7 +23,7 @@ export function SearchBar() {
     { enabled: query.length > 0 },
   );
 
-  const handleSelect = (type: string, id: string) => {
+  const handleSelect = (type: "albums" | "artists", id: string) => {
     setOpen(false);
     router.push(`/${type}/${id}`);
   };
@@ -148,7 +148,7 @@ export function SearchBar() {
                   <div
                     key={song.id}
                     className="flex cursor-pointer items-center gap-2 rounded-md p-2 hover:bg-accent"
-                    onClick={() => handleSelect("songs", song.id)}
+                    onClick={() => handleSelect("albums", song.album.id)}
                   >
                     <div className="relative h-8 w-8 overflow-hidden rounded">
                       <Image
