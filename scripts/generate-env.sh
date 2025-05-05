@@ -4,6 +4,7 @@ set -euo pipefail
 read -p "Enter your AUTH_DISCORD_ID: " AUTH_DISCORD_ID
 read -p "Enter your AUTH_DISCORD_SECRET: " AUTH_DISCORD_SECRET
 read -p "Enter your SUNOAPI_API_KEY: " SUNOAPI_API_KEY
+read -p "Enter your PROXY_URL: " PROXY_URL
 
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
 MINIO_PASSWORD=$(openssl rand -hex 32)

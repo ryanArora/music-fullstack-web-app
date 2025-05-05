@@ -418,7 +418,7 @@ async function saveArtistToDatabase(artistData: {
 
           // Download audio using yt-dlp (audio only, best quality webm)
           execSync(
-            `yt-dlp --user-agent "${ua}" -f "bestaudio[ext=webm]" -o "${tempFilePath}" "${songData.url}"`,
+            `yt-dlp --proxy "${env.PROXY_URL}" --user-agent "${ua}" -f "bestaudio[ext=webm]" -o "${tempFilePath}" "${songData.url}"`,
             { stdio: "inherit" },
           );
 

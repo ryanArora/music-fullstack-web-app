@@ -8,7 +8,15 @@ import { env } from "./src/env.js";
 const config = {
   devIndicators: false,
   images: {
-    remotePatterns: [new URL(env.NEXT_PUBLIC_MINIO_URL)],
+    remotePatterns: [
+      {
+        protocol: env.NEXT_PUBLIC_MINIO_URL.startsWith("https://")
+          ? "https"
+          : "http",
+        hostname: new URL(env.NEXT_PUBLIC_MINIO_URL).hostname,
+        port: new URL(env.NEXT_PUBLIC_MINIO_URL).port,
+      },
+    ],
   },
   experimental: {
     ppr: true,

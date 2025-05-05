@@ -33,6 +33,7 @@ export const env = createEnv({
     AUTH_DISCORD_ID: z.string(),
     AUTH_DISCORD_SECRET: z.string(),
     SUNOAPI_API_KEY: z.string(),
+    PROXY_URL: z.string().url(),
   },
   client: {
     NEXT_PUBLIC_IS_STAGING: booleanSchema,
