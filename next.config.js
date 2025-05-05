@@ -12,7 +12,6 @@ const config = {
       {
         protocol: env.MINIO_USE_SSL ? "https" : "http",
         hostname: env.MINIO_ENDPOINT,
-        port: env.MINIO_PORT.toString(),
       },
     ],
   },
